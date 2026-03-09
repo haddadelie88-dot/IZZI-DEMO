@@ -6,6 +6,14 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 
+export interface ClientAvatar {
+  id: string
+  name: string
+  imageUrl: string
+  industry: string
+  isPrimary?: boolean
+}
+
 export interface Client {
   id: string
   companyName: string
@@ -17,6 +25,7 @@ export interface Client {
   status: "published" | "not_published"
   crmConnected?: boolean
   crmType?: string
+  avatars?: ClientAvatar[]
 }
 
 interface ClientCardProps {

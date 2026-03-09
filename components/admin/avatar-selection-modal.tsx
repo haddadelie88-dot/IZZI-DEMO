@@ -1,7 +1,5 @@
 "use client"
 
-"use client"
-
 import { Sparkles, X } from "lucide-react"
 import Image from "next/image"
 import {
