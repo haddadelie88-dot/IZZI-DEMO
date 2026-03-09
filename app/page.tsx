@@ -2,11 +2,12 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { Users, Eye, Settings, Plus, Search } from "lucide-react"
+import { Users, Eye, Settings, Plus, Search, LayoutGrid, List } from "lucide-react"
 import { Sidebar } from "@/components/admin/sidebar"
 import { Header } from "@/components/admin/header"
 import { StatsCard } from "@/components/admin/stats-card"
 import { ClientCard, Client } from "@/components/admin/client-card"
+import { ClientListItem } from "@/components/admin/client-list-item"
 import { CreateClientModal, ClientFormData } from "@/components/admin/create-client-modal"
 import { CRMConnectionModal } from "@/components/admin/crm-connection-modal"
 import { Button } from "@/components/ui/button"
@@ -85,6 +86,7 @@ export default function ClientsManagement() {
   const [createModalOpen, setCreateModalOpen] = useState(false)
   const [crmModalOpen, setCrmModalOpen] = useState(false)
   const [selectedClient, setSelectedClient] = useState<Client | null>(null)
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid")
 
   // Computed stats
   const totalClients = clients.length
@@ -236,6 +238,26 @@ export default function ClientsManagement() {
 
             <div className="flex-1" />
 
+            {/* View Toggle */}
+            <div className="flex items-center gap-1 bg-card border border-border rounded-lg p-1">
+              <Button
+                variant={viewMode === "grid" ? "default" : "ghost"}
+                size="sm"
+                className={`h-8 w-8 p-0 ${viewMode === "grid" ? "bg-primary text-primary-foreground" : ""}`}
+                onClick={() => setViewMode("grid")}
+              >
+                <LayoutGrid className="h-4 w-4" />
+              </Button>
+              <Button
+                variant={viewMode === "list" ? "default" : "ghost"}
+                size="sm"
+                className={`h-8 w-8 p-0 ${viewMode === "list" ? "bg-primary text-primary-foreground" : ""}`}
+                onClick={() => setViewMode("list")}
+              >
+                <List className="h-4 w-4" />
+              </Button>
+            </div>
+
             <Button
               onClick={() => setCreateModalOpen(true)}
               className="bg-foreground text-background hover:bg-foreground/90"
@@ -245,19 +267,34 @@ export default function ClientsManagement() {
             </Button>
           </div>
 
-          {/* Clients Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredClients.map((client) => (
-              <ClientCard
-                key={client.id}
-                client={client}
-                onConfigure={handleConfigure}
-                onConnectCRM={handleConnectCRM}
-                onDelete={handleDelete}
-                onEdit={handleEdit}
-              />
-            ))}
-          </div>
+          {/* Clients Grid/List View */}
+          {viewMode === "grid" ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+              {filteredClients.map((client) => (
+                <ClientCard
+                  key={client.id}
+                  client={client}
+                  onConfigure={handleConfigure}
+                  onConnectCRM={handleConnectCRM}
+                  onDelete={handleDelete}
+                  onEdit={handleEdit}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="flex flex-col gap-3">
+              {filteredClients.map((client) => (
+                <ClientListItem
+                  key={client.id}
+                  client={client}
+                  onConfigure={handleConfigure}
+                  onConnectCRM={handleConnectCRM}
+                  onDelete={handleDelete}
+                  onEdit={handleEdit}
+                />
+              ))}
+            </div>
+          )}
 
           {filteredClients.length === 0 && (
             <div className="text-center py-12">

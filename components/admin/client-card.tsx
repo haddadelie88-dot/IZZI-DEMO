@@ -99,32 +99,36 @@ export function ClientCard({
       </div>
 
       {/* Actions */}
-      <div className="flex items-center gap-2">
-        <Button
-          variant="outline"
-          size="sm"
-          className="flex-1 text-foreground border-border"
-          onClick={() => onConfigure(client)}
-        >
-          <Settings className="h-4 w-4 mr-2" />
-          Configure Avatar
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          className="flex-1 text-foreground border-border"
-          onClick={() => onConnectCRM(client)}
-        >
-          Connect with CRM
-        </Button>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="text-destructive hover:text-destructive hover:bg-destructive/10"
-          onClick={() => onDelete(client)}
-        >
-          <Trash2 className="h-4 w-4" />
-        </Button>
+      <div className="flex flex-col gap-2">
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            className="flex-1 text-foreground border-border text-xs sm:text-sm"
+            onClick={() => onConfigure(client)}
+          >
+            <Settings className="h-4 w-4 mr-1 sm:mr-2 flex-shrink-0" />
+            <span className="truncate">Configure Avatar</span>
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="flex-1 text-foreground border-border text-xs sm:text-sm"
+            onClick={() => onConnectCRM(client)}
+          >
+            <span className="truncate">Connect with CRM</span>
+          </Button>
+        </div>
+        <div className="flex justify-end">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 w-8"
+            onClick={() => onDelete(client)}
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
     </Card>
   )
