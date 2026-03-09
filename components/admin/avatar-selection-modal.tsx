@@ -1,6 +1,9 @@
 "use client"
 
+"use client"
+
 import { Sparkles, X } from "lucide-react"
+import Image from "next/image"
 import {
   Dialog,
   DialogContent,
@@ -65,11 +68,13 @@ export function AvatarSelectionModal({
                 </Badge>
                 
                 {/* Avatar Image */}
-                <div className="aspect-[4/3] bg-muted">
-                  <img
+                <div className="aspect-[4/3] bg-muted relative overflow-hidden">
+                  <Image
                     src={avatar.imageUrl}
                     alt={avatar.name}
-                    className="w-full h-full object-cover"
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 768px) 50vw, 300px"
                   />
                 </div>
                 

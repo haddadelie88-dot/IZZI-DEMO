@@ -12,6 +12,7 @@ export interface Client {
   clientName: string
   email: string
   phone: string
+  domain?: string
   industry: string
   status: "published" | "not_published"
   crmConnected?: boolean

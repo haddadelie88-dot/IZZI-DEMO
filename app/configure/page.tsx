@@ -203,6 +203,13 @@ Examples:"
                     </div>
                   )}
                   
+                  {/* Click to change overlay */}
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center">
+                    <span className="text-white text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity">
+                      Click to change avatar
+                    </span>
+                  </div>
+                  
                   {/* Overlay buttons */}
                   <div className="absolute bottom-4 right-4 flex gap-2">
                     <button className="p-2 bg-white/80 rounded-lg hover:bg-white transition-colors">

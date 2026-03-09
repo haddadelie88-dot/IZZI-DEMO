@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { Users, Eye, Settings, Plus, Search, LayoutGrid, List } from "lucide-react"
-import { Sidebar } from "@/components/admin/sidebar"
+// Sidebar is only shown on Configure Avatar page
 import { Header } from "@/components/admin/header"
 import { StatsCard } from "@/components/admin/stats-card"
 import { ClientCard, Client } from "@/components/admin/client-card"
@@ -87,6 +87,8 @@ export default function ClientsManagement() {
   const [crmModalOpen, setCrmModalOpen] = useState(false)
   const [selectedClient, setSelectedClient] = useState<Client | null>(null)
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid")
+  const [editingClient, setEditingClient] = useState<Client | null>(null)
+  const [modalMode, setModalMode] = useState<"create" | "edit">("create")
 
   // Computed stats
   const totalClients = clients.length
@@ -108,16 +110,35 @@ export default function ClientsManagement() {
   })
 
   const handleCreateClient = (data: ClientFormData) => {
-    const newClient: Client = {
-      id: Date.now().toString(),
-      companyName: data.companyName,
-      clientName: data.clientName,
-      email: data.email,
-      phone: data.phone,
-      industry: data.industryType,
-      status: "not_published",
+    if (modalMode === "edit" && editingClient) {
+      // Update existing client
+      setClients(clients.map(c => 
+        c.id === editingClient.id 
+          ? {
+              ...c,
+              companyName: data.companyName,
+              clientName: data.clientName,
+              email: data.email,
+              phone: data.phone,
+              industry: data.industryType,
+            }
+          : c
+      ))
+      setEditingClient(null)
+      setModalMode("create")
+    } else {
+      // Create new client
+      const newClient: Client = {
+        id: Date.now().toString(),
+        companyName: data.companyName,
+        clientName: data.clientName,
+        email: data.email,
+        phone: data.phone,
+        industry: data.industryType,
+        status: "not_published",
+      }
+      setClients([...clients, newClient])
     }
-    setClients([...clients, newClient])
   }
 
   const handleConfigure = (client: Client) => {
@@ -146,14 +167,27 @@ export default function ClientsManagement() {
   }
 
   const handleEdit = (client: Client) => {
-    // For now, just log - could open edit modal
-    console.log("Edit client:", client)
+    setEditingClient(client)
+    setModalMode("edit")
+    setCreateModalOpen(true)
+  }
+
+  const handleOpenCreateModal = () => {
+    setEditingClient(null)
+    setModalMode("create")
+    setCreateModalOpen(true)
+  }
+
+  const handleModalClose = (open: boolean) => {
+    setCreateModalOpen(open)
+    if (!open) {
+      setEditingClient(null)
+      setModalMode("create")
+    }
   }
 
   return (
     <div className="flex min-h-screen bg-background">
-      <Sidebar />
-      
       <main className="flex-1 flex flex-col">
         <Header />
         
@@ -259,7 +293,7 @@ export default function ClientsManagement() {
             </div>
 
             <Button
-              onClick={() => setCreateModalOpen(true)}
+              onClick={handleOpenCreateModal}
               className="bg-foreground text-background hover:bg-foreground/90"
             >
               <Plus className="h-4 w-4 mr-2" />
@@ -307,8 +341,17 @@ export default function ClientsManagement() {
       {/* Modals */}
       <CreateClientModal
         open={createModalOpen}
-        onOpenChange={setCreateModalOpen}
+        onOpenChange={handleModalClose}
         onSubmit={handleCreateClient}
+        mode={modalMode}
+        editData={editingClient ? {
+          companyName: editingClient.companyName,
+          clientName: editingClient.clientName,
+          domain: editingClient.domain || "",
+          email: editingClient.email,
+          phone: editingClient.phone,
+          industryType: editingClient.industry,
+        } : null}
       />
       
       <CRMConnectionModal

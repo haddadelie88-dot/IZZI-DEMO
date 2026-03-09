@@ -19,12 +19,6 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 
-interface CreateClientModalProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  onSubmit: (data: ClientFormData) => void
-}
-
 export interface ClientFormData {
   companyName: string
   clientName: string
@@ -32,6 +26,14 @@ export interface ClientFormData {
   email: string
   phone: string
   industryType: string
+}
+
+interface CreateClientModalProps {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  onSubmit: (data: ClientFormData) => void
+  editData?: ClientFormData | null
+  mode?: "create" | "edit"
 }
 
 const industries = [
@@ -44,7 +46,13 @@ const industries = [
   "Hospitality",
 ]
 
-export function CreateClientModal({ open, onOpenChange, onSubmit }: CreateClientModalProps) {
+export function CreateClientModal({ 
+  open, 
+  onOpenChange, 
+  onSubmit, 
+  editData,
+  mode = "create" 
+}: CreateClientModalProps) {
   const [formData, setFormData] = useState<ClientFormData>({
     companyName: "",
     clientName: "",
@@ -53,6 +61,35 @@ export function CreateClientModal({ open, onOpenChange, onSubmit }: CreateClient
     phone: "",
     industryType: "",
   })
+
+  // Update form data when editData changes
+  useState(() => {
+    if (editData && mode === "edit") {
+      setFormData(editData)
+    }
+  })
+
+  // Reset form when modal opens/closes or editData changes
+  const handleOpenChange = (newOpen: boolean) => {
+    if (newOpen && editData && mode === "edit") {
+      setFormData(editData)
+    } else if (!newOpen) {
+      setFormData({
+        companyName: "",
+        clientName: "",
+        domain: "",
+        email: "",
+        phone: "",
+        industryType: "",
+      })
+    }
+    onOpenChange(newOpen)
+  }
+
+  // Set initial data when modal opens in edit mode
+  if (open && editData && mode === "edit" && formData.companyName !== editData.companyName) {
+    setFormData(editData)
+  }
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -65,16 +102,22 @@ export function CreateClientModal({ open, onOpenChange, onSubmit }: CreateClient
       phone: "",
       industryType: "",
     })
-    onOpenChange(false)
+    handleOpenChange(false)
   }
 
+  const isEditMode = mode === "edit"
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-md bg-card">
         <DialogHeader>
-          <DialogTitle className="text-xl font-semibold">Create Client</DialogTitle>
+          <DialogTitle className="text-xl font-semibold">
+            {isEditMode ? "Edit Client" : "Create Client"}
+          </DialogTitle>
           <DialogDescription>
-            Fill in the details to create a new client account
+            {isEditMode 
+              ? "Update the client account details" 
+              : "Fill in the details to create a new client account"}
           </DialogDescription>
         </DialogHeader>
 
@@ -177,7 +220,7 @@ export function CreateClientModal({ open, onOpenChange, onSubmit }: CreateClient
             <Button
               type="button"
               variant="outline"
-              onClick={() => onOpenChange(false)}
+              onClick={() => handleOpenChange(false)}
               className="px-8 border-foreground text-foreground"
             >
               Cancel
@@ -186,7 +229,7 @@ export function CreateClientModal({ open, onOpenChange, onSubmit }: CreateClient
               type="submit"
               className="px-8 bg-foreground text-background hover:bg-foreground/90"
             >
-              Create Client
+              {isEditMode ? "Save Changes" : "Create Client"}
             </Button>
           </div>
         </form>
