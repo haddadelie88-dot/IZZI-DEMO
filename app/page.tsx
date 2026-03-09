@@ -1,0 +1,285 @@
+"use client"
+
+import { useState } from "react"
+import { useRouter } from "next/navigation"
+import { Users, Eye, Settings, Plus, Search } from "lucide-react"
+import { Sidebar } from "@/components/admin/sidebar"
+import { Header } from "@/components/admin/header"
+import { StatsCard } from "@/components/admin/stats-card"
+import { ClientCard, Client } from "@/components/admin/client-card"
+import { CreateClientModal, ClientFormData } from "@/components/admin/create-client-modal"
+import { CRMConnectionModal } from "@/components/admin/crm-connection-modal"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+
+// Mock data
+const initialClients: Client[] = [
+  {
+    id: "1",
+    companyName: "Azilen",
+    clientName: "Raksha Jain",
+    email: "raksha@yopmail.com",
+    phone: "1234566789",
+    industry: "Real Estate",
+    status: "not_published",
+  },
+  {
+    id: "2",
+    companyName: "Dar Global",
+    clientName: "John Doe",
+    email: "john.doe@hotmail.com",
+    phone: "+9712233465",
+    industry: "Real Estate",
+    status: "not_published",
+  },
+  {
+    id: "3",
+    companyName: "SSUP World",
+    clientName: "SSUP",
+    email: "hello@ssupworld.com",
+    phone: "+12345678901",
+    industry: "Real Estate",
+    status: "not_published",
+  },
+  {
+    id: "4",
+    companyName: "SSUP",
+    clientName: "SSUP",
+    email: "admin@ssup.com",
+    phone: "+1987654321",
+    industry: "Retail - Furniture",
+    status: "not_published",
+    crmConnected: true,
+    crmType: "Zoho",
+  },
+]
+
+const industries = [
+  "All Industries",
+  "Real Estate",
+  "Retail - Furniture",
+  "Retail - Electronics",
+  "Healthcare",
+  "Finance",
+]
+
+const statusOptions = [
+  "All Clients",
+  "Published",
+  "Not Published",
+]
+
+export default function ClientsManagement() {
+  const router = useRouter()
+  const [clients, setClients] = useState<Client[]>(initialClients)
+  const [searchQuery, setSearchQuery] = useState("")
+  const [statusFilter, setStatusFilter] = useState("All Clients")
+  const [industryFilter, setIndustryFilter] = useState("All Industries")
+  const [createModalOpen, setCreateModalOpen] = useState(false)
+  const [crmModalOpen, setCrmModalOpen] = useState(false)
+  const [selectedClient, setSelectedClient] = useState<Client | null>(null)
+
+  // Computed stats
+  const totalClients = clients.length
+  const publishedCount = clients.filter((c) => c.status === "published").length
+  const pendingCount = clients.filter((c) => c.status === "not_published").length
+
+  // Filtered clients
+  const filteredClients = clients.filter((client) => {
+    const matchesSearch =
+      client.companyName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      client.clientName.toLowerCase().includes(searchQuery.toLowerCase())
+    const matchesStatus =
+      statusFilter === "All Clients" ||
+      (statusFilter === "Published" && client.status === "published") ||
+      (statusFilter === "Not Published" && client.status === "not_published")
+    const matchesIndustry =
+      industryFilter === "All Industries" || client.industry === industryFilter
+    return matchesSearch && matchesStatus && matchesIndustry
+  })
+
+  const handleCreateClient = (data: ClientFormData) => {
+    const newClient: Client = {
+      id: Date.now().toString(),
+      companyName: data.companyName,
+      clientName: data.clientName,
+      email: data.email,
+      phone: data.phone,
+      industry: data.industryType,
+      status: "not_published",
+    }
+    setClients([...clients, newClient])
+  }
+
+  const handleConfigure = (client: Client) => {
+    router.push(`/configure?clientId=${client.id}`)
+  }
+
+  const handleConnectCRM = (client: Client) => {
+    setSelectedClient(client)
+    setCrmModalOpen(true)
+  }
+
+  const handleCRMConnect = (domainExtension: string) => {
+    if (selectedClient) {
+      setClients(
+        clients.map((c) =>
+          c.id === selectedClient.id
+            ? { ...c, crmConnected: true, crmType: `Zoho${domainExtension ? `.${domainExtension}` : ""}` }
+            : c
+        )
+      )
+    }
+  }
+
+  const handleDelete = (client: Client) => {
+    setClients(clients.filter((c) => c.id !== client.id))
+  }
+
+  const handleEdit = (client: Client) => {
+    // For now, just log - could open edit modal
+    console.log("Edit client:", client)
+  }
+
+  return (
+    <div className="flex min-h-screen bg-background">
+      <Sidebar />
+      
+      <main className="flex-1 flex flex-col">
+        <Header />
+        
+        <div className="flex-1 p-8">
+          {/* Page Header */}
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold text-foreground mb-2">
+              Clients Management
+            </h1>
+            <p className="text-muted-foreground">
+              Set up your AI avatar&apos;s knowledge, personality, and interaction style
+            </p>
+          </div>
+
+          {/* Stats Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <StatsCard
+              title="Total Client"
+              value={totalClients}
+              description="Active accounts in your portal"
+              icon={Users}
+            />
+            <StatsCard
+              title="Avatar Published"
+              value={publishedCount}
+              description="Live and engaging visitors"
+              icon={Eye}
+            />
+            <StatsCard
+              title="Pending Setup"
+              value={pendingCount}
+              description="Awaiting configuration"
+              icon={Settings}
+            />
+          </div>
+
+          {/* Filters */}
+          <div className="flex flex-wrap items-center gap-4 mb-8">
+            <div className="flex-1 min-w-[250px] max-w-md">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search by company name or client name"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10 bg-card border-border"
+                />
+              </div>
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">Status Filter</span>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-[140px] bg-card border-border">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {statusOptions.map((option) => (
+                    <SelectItem key={option} value={option}>
+                      {option}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">Industry Filter</span>
+              <Select value={industryFilter} onValueChange={setIndustryFilter}>
+                <SelectTrigger className="w-[150px] bg-card border-border">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {industries.map((industry) => (
+                    <SelectItem key={industry} value={industry}>
+                      {industry}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="flex-1" />
+
+            <Button
+              onClick={() => setCreateModalOpen(true)}
+              className="bg-foreground text-background hover:bg-foreground/90"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Add Client
+            </Button>
+          </div>
+
+          {/* Clients Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredClients.map((client) => (
+              <ClientCard
+                key={client.id}
+                client={client}
+                onConfigure={handleConfigure}
+                onConnectCRM={handleConnectCRM}
+                onDelete={handleDelete}
+                onEdit={handleEdit}
+              />
+            ))}
+          </div>
+
+          {filteredClients.length === 0 && (
+            <div className="text-center py-12">
+              <p className="text-muted-foreground">No clients found matching your filters.</p>
+            </div>
+          )}
+        </div>
+      </main>
+
+      {/* Modals */}
+      <CreateClientModal
+        open={createModalOpen}
+        onOpenChange={setCreateModalOpen}
+        onSubmit={handleCreateClient}
+      />
+      
+      <CRMConnectionModal
+        open={crmModalOpen}
+        onOpenChange={setCrmModalOpen}
+        onConnect={handleCRMConnect}
+        clientName={selectedClient?.companyName}
+      />
+    </div>
+  )
+}
