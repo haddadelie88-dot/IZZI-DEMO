@@ -18,21 +18,21 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 
-// Mock avatars
+// Available avatars
 const availableAvatars: AvatarOption[] = [
   {
     id: "1",
     name: "Sarah",
-    role: "Professional Real Estate Agent",
-    industry: "Real Estate",
-    imageUrl: "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-hlNrXveXLKP9LeCCj3mzGbXT5Veyo2.png",
+    role: "Professional Business Agent",
+    industry: "Corporate",
+    imageUrl: "/avatars/sarah.png",
   },
   {
     id: "2",
-    name: "Nouva",
+    name: "Noura",
     role: "Professional Real Estate Agent",
     industry: "Real Estate",
-    imageUrl: "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-hlNrXveXLKP9LeCCj3mzGbXT5Veyo2.png",
+    imageUrl: "/avatars/noura.jpeg",
   },
 ]
 
@@ -196,7 +196,7 @@ Examples:"
                   ) : (
                     <div className="w-full h-full flex items-center justify-center">
                       <img
-                        src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-NCmh7A3qkdoAUAue4FyDlFOM3gy53W.png"
+                        src="/avatars/noura.jpeg"
                         alt="Default Avatar"
                         className="w-full h-full object-cover"
                       />
