@@ -5,6 +5,9 @@ import { Link as LinkIcon, X, CheckCircle2, XCircle, Info } from "lucide-react"
 import {
   Dialog,
   DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -66,6 +69,7 @@ export function CRMConnectionModal({
   const [testStatus, setTestStatus] = useState<null | { ok: boolean; message: string }>(null)
   const [saving, setSaving] = useState(false)
   const [testing, setTesting] = useState(false)
+  const [saveError, setSaveError] = useState<string | null>(null)
 
   const canSave = useMemo(() => {
     if (!clientId) return false
@@ -162,6 +166,7 @@ export function CRMConnectionModal({
     if (!clientId) return
     setSaving(true)
     try {
+      setSaveError(null)
       const payload: CrmConfig = {
         clientId,
         crmType,
@@ -179,12 +184,16 @@ export function CRMConnectionModal({
               }
             : undefined,
       }
-      await fetch(`/api/crm/config`, {
+      const res = await fetch(`/api/crm/config`, {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify(payload),
       })
-
+      if (!res.ok) {
+        const json = (await res.json().catch(() => null)) as any
+        setSaveError(json?.error || "Failed to save CRM configuration.")
+        return
+      }
       onConnect(crmType === "salesforce" ? "Salesforce" : "Odoo")
       onOpenChange(false)
     } finally {
@@ -205,17 +214,19 @@ export function CRMConnectionModal({
             <X className="h-4 w-4" />
           </Button>
 
-          {/* Icon */}
-          <div className="flex justify-center mb-6">
-            <div className="p-4 rounded-lg border border-border">
-              <LinkIcon className="h-6 w-6 text-cyan-500" />
+          <DialogHeader className="mb-6">
+            <div className="flex justify-center mb-4">
+              <div className="p-4 rounded-lg border border-border">
+                <LinkIcon className="h-6 w-6 text-cyan-500" />
+              </div>
             </div>
-          </div>
-
-          {/* Title */}
-          <h2 className="text-xl font-semibold text-center mb-8">
-            CRM Integration {clientName ? `— ${clientName}` : ""}
-          </h2>
+            <DialogTitle className="text-xl font-semibold text-center">
+              CRM Integration {clientName ? `— ${clientName}` : ""}
+            </DialogTitle>
+            <DialogDescription className="text-center">
+              Configure how this client connects to Odoo or Salesforce. Required for pushing IZZI leads into CRM.
+            </DialogDescription>
+          </DialogHeader>
 
           {!clientId ? (
             <div className="rounded-lg border border-border bg-background p-4 text-sm text-muted-foreground">
@@ -375,6 +386,13 @@ export function CRMConnectionModal({
                     <XCircle className="h-4 w-4 text-red-700 mt-0.5" />
                   )}
                   <div className={testStatus.ok ? "text-green-800" : "text-red-800"}>{testStatus.message}</div>
+                </div>
+              )}
+
+              {/* Save error */}
+              {saveError && (
+                <div className="mt-3 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800">
+                  {saveError}
                 </div>
               )}
 

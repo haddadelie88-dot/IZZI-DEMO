@@ -309,26 +309,25 @@ export default function ConfigureAvatar() {
       if (!res || !res.ok) return
       const cfg = (await res.json().catch(() => null)) as any
       if (cancelled || !cfg) return
-      setWhatsappConfig({
+
+      setWhatsappConfig((prev) => ({
         agentId: selectedAvatarId,
         followUpEnabled: Boolean(cfg.followUpEnabled),
         followUpDelayMinutes: Number(cfg.followUpDelayMinutes ?? 30),
-        followUpMessageTemplate: cfg.followUpMessageTemplate || whatsappConfig.followUpMessageTemplate,
+        followUpMessageTemplate: cfg.followUpMessageTemplate || prev.followUpMessageTemplate,
         lostReengagementEnabled: Boolean(cfg.lostReengagementEnabled),
         lostReengagementDelayDays: Number(cfg.lostReengagementDelayDays ?? 7),
-        lostReengagementMessageTemplate:
-          cfg.lostReengagementMessageTemplate || whatsappConfig.lostReengagementMessageTemplate,
+        lostReengagementMessageTemplate: cfg.lostReengagementMessageTemplate || prev.lostReengagementMessageTemplate,
         whatsappProvider: (cfg.whatsappProvider as WhatsappProvider) || "twilio",
         whatsappApiKey: cfg.whatsappApiKey || "",
         whatsappFromNumber: cfg.whatsappFromNumber || "",
-      })
+      }))
     }
 
     loadWhatsApp()
     return () => {
       cancelled = true
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedAvatarId, formData.industry])
 
   useEffect(() => {
@@ -343,23 +342,25 @@ export default function ConfigureAvatar() {
       if (!res || !res.ok) return
       const cfg = (await res.json().catch(() => null)) as any
       if (cancelled || !cfg) return
-      setPostSaleConfig({
+
+      setPostSaleConfig((prev) => ({
         agentId: selectedAvatarId,
         thankYouEnabled: Boolean(cfg.thankYouEnabled),
-        thankYouMessageTemplate: cfg.thankYouMessageTemplate || postSaleConfig.thankYouMessageTemplate,
+        thankYouMessageTemplate: cfg.thankYouMessageTemplate || prev.thankYouMessageTemplate,
         paymentRemindersEnabled: Boolean(cfg.paymentRemindersEnabled),
-        paymentReminderDaysBefore: Array.isArray(cfg.paymentReminderDaysBefore) ? cfg.paymentReminderDaysBefore : [7, 3, 1],
-        paymentReminderTemplate: cfg.paymentReminderTemplate || postSaleConfig.paymentReminderTemplate,
+        paymentReminderDaysBefore: Array.isArray(cfg.paymentReminderDaysBefore)
+          ? cfg.paymentReminderDaysBefore
+          : prev.paymentReminderDaysBefore,
+        paymentReminderTemplate: cfg.paymentReminderTemplate || prev.paymentReminderTemplate,
         constructionUpdatesEnabled: Boolean(cfg.constructionUpdatesEnabled),
-        constructionUpdateTemplate: cfg.constructionUpdateTemplate || postSaleConfig.constructionUpdateTemplate,
-      })
+        constructionUpdateTemplate: cfg.constructionUpdateTemplate || prev.constructionUpdateTemplate,
+      }))
     }
 
     loadPostSale()
     return () => {
       cancelled = true
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedAvatarId, formData.industry])
 
   const renderTemplatePreview = (tpl: string) => {

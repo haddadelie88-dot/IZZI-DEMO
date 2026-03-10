@@ -19,7 +19,8 @@ async function readJsonFile<T>(filePath: string, fallback: T): Promise<T> {
 
 async function writeJsonFile<T>(filePath: string, value: T): Promise<void> {
   await ensureDir()
-  const tmp = `${filePath}.tmp`
+  const uniqueSuffix = `${Date.now()}-${Math.random().toString(16).slice(2)}`
+  const tmp = `${filePath}.${uniqueSuffix}.tmp`
   await fs.writeFile(tmp, JSON.stringify(value, null, 2), "utf8")
   await fs.rename(tmp, filePath)
 }

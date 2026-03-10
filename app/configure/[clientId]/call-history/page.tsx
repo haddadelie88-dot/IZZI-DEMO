@@ -28,7 +28,6 @@ import { Input } from "@/components/ui/input"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Slider } from "@/components/ui/slider"
-import { ScrollArea } from "@/components/ui/scroll-area"
 import {
   Table,
   TableBody,
@@ -226,10 +225,73 @@ export default function CallHistoryPage() {
   const [audioProgress, setAudioProgress] = useState(0)
   const [crmStage, setCrmStage] = useState<CrmStage>("New")
   const [stageUpdating, setStageUpdating] = useState(false)
+  const [stageError, setStageError] = useState<string | null>(null)
   const [whatsappLogs, setWhatsappLogs] = useState<WhatsappLogEntry[]>([])
   const [postSaleEvents, setPostSaleEvents] = useState<PostSaleEvent[]>([])
   
   const [calls] = useState<CallRecord[]>(mockCalls)
+
+  const buildWorkflowWhatsappMocks = (call: CallRecord, avatar: TenantAvatar): WhatsappLogEntry[] => {
+    // Only mock for the Dar Global / Real Estate persona
+    if (avatar.industry !== "Real Estate") return []
+
+    const baseTime = new Date("2026-03-10T10:00:00Z").getTime()
+    const mkTime = (offsetMinutes: number) =>
+      new Date(baseTime + offsetMinutes * 60_000).toISOString()
+
+    // Map specific mock calls to workflow paths
+    switch (call.id) {
+      // Converter: clear RTB during the live call -> no WhatsApp needed
+      case "1":
+        return []
+      // Returner: RTB after WhatsApp follow-up click
+      case "2":
+        return [
+          {
+            id: "mock-wp-2-post",
+            sessionId: call.id,
+            messageType: "post_call",
+            sentAt: mkTime(30),
+            status: "Sent",
+            messagePreview:
+              "Hi Maria, thanks for your time earlier about the Downtown apartment. Ready to continue where we left off?",
+          },
+          {
+            id: "mock-wp-2-returner",
+            sessionId: call.id,
+            messageType: "reengagement",
+            sentAt: mkTime(45),
+            status: "Delivered",
+            messagePreview:
+              "Hi Maria, I’ve shortlisted the 3 apartments you liked — tap to return to IZZI and confirm your preferred unit.",
+          },
+        ]
+      // Phoenix: RTB after Day‑7 revival
+      case "3":
+        return [
+          {
+            id: "mock-wp-3-post",
+            sessionId: call.id,
+            messageType: "post_call",
+            sentAt: mkTime(20),
+            status: "Sent",
+            messagePreview:
+              "Hi there, thanks for speaking with IZZI earlier. I’m here if you’d like to continue exploring Dubai properties.",
+          },
+          {
+            id: "mock-wp-3-phoenix",
+            sessionId: call.id,
+            messageType: "reengagement",
+            sentAt: mkTime(7 * 24 * 60), // Day 7
+            status: "Delivered",
+            messagePreview:
+              "Hi again, we’ve just added 2 new listings that match your criteria. Tap to see fresh villas and continue with IZZI.",
+          },
+        ]
+      default:
+        return []
+    }
+  }
 
   // Load CRM stage for the selected lead/session
   useEffect(() => {
@@ -276,16 +338,25 @@ export default function CallHistoryPage() {
       const res = await fetch(`/api/whatsapp/log?sessionId=${encodeURIComponent(selectedCall.id)}`).catch(
         () => null,
       )
-      if (!res || !res.ok) return
+      if (!res || !res.ok) {
+        if (!cancelled) {
+          setWhatsappLogs(buildWorkflowWhatsappMocks(selectedCall, selectedAvatar))
+        }
+        return
+      }
       const rows = (await res.json().catch(() => [])) as WhatsappLogEntry[]
       if (cancelled) return
-      setWhatsappLogs(rows)
+      if (rows.length === 0) {
+        setWhatsappLogs(buildWorkflowWhatsappMocks(selectedCall, selectedAvatar))
+      } else {
+        setWhatsappLogs(rows)
+      }
     }
     loadLogs()
     return () => {
       cancelled = true
     }
-  }, [selectedCall?.id])
+  }, [selectedCall?.id, selectedAvatar])
 
   const handleSelectAvatar = (avatar: TenantAvatar) => {
     setSelectedAvatar(avatar)
@@ -571,8 +642,8 @@ export default function CallHistoryPage() {
               </Button>
             </div>
 
-            <ScrollArea className="flex-1">
-              <div className="p-6 space-y-6">
+            <div className="flex-1 overflow-y-auto">
+              <div className="p-6 space-y-6 pb-24">
                 {/* Call Info */}
                 <div className="space-y-4">
                   <div className="flex items-center gap-3">
@@ -618,10 +689,12 @@ export default function CallHistoryPage() {
                       value={crmStage}
                       onValueChange={async (value) => {
                         const nextStage = value as CrmStage
+                        const previousStage = crmStage
                         setCrmStage(nextStage)
+                        setStageError(null)
                         setStageUpdating(true)
                         try {
-                          await fetch(
+                          const res = await fetch(
                             `/api/crm/salesforce/lead/${encodeURIComponent(selectedCall.id)}/status`,
                             {
                               method: "PATCH",
@@ -629,6 +702,11 @@ export default function CallHistoryPage() {
                               body: JSON.stringify({ stage: nextStage }),
                             },
                           )
+                          if (!res.ok) {
+                            const json = (await res.json().catch(() => null)) as any
+                            setCrmStage(previousStage)
+                            setStageError(json?.error || "Failed to update stage.")
+                          }
                         } finally {
                           setStageUpdating(false)
                         }
@@ -646,7 +724,7 @@ export default function CallHistoryPage() {
                       </SelectContent>
                     </Select>
                     <span className="text-xs text-muted-foreground">
-                      {stageUpdating ? "Updating…" : "Saved locally"}
+                      {stageUpdating ? "Updating…" : stageError ? "Error, not saved" : "Saved locally"}
                     </span>
                   </div>
                 </div>
@@ -864,7 +942,7 @@ export default function CallHistoryPage() {
                   </div>
                 )}
               </div>
-            </ScrollArea>
+            </div>
 
             {/* Panel Footer */}
             <div className="p-4 border-t border-border bg-muted/30">

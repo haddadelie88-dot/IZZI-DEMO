@@ -46,6 +46,48 @@ type PipelineResponse = {
   stages: { stage: string; count: number }[]
 }
 
+type MockAnalytics = {
+  totalCalls: number
+  avgDuration: string
+  uniqueCallers: number
+  conversionRate: string
+  reKpis?: RealEstateKpis
+  pipeline?: { stage: string; count: number }[]
+}
+
+const mockAnalyticsByAvatar: Record<string, MockAnalytics> = {
+  // Corporate example
+  "1": {
+    totalCalls: 18,
+    avgDuration: "3:05",
+    uniqueCallers: 14,
+    conversionRate: "22%",
+  },
+  // Noura – Real Estate persona aligned with Dar Global workflow
+  "2": {
+    totalCalls: 32,
+    avgDuration: "4:10",
+    uniqueCallers: 24,
+    conversionRate: "31%",
+    reKpis: {
+      // Qualified / RTB over total
+      lead_qualification_rate: 0.56,
+      // Returner + Phoenix responses over total WhatsApp sends
+      whatsapp_response_rate: 0.48,
+      // Phoenix conversions over Lost leads
+      lost_reengagement_rate: 0.32,
+    },
+    pipeline: [
+      { stage: "New", count: 10 },
+      { stage: "Contacted", count: 7 },
+      { stage: "Qualified", count: 6 }, // RTB
+      { stage: "Negotiating", count: 4 },
+      { stage: "Closed", count: 3 },
+      { stage: "Lost", count: 2 }, // feeds Phoenix path
+    ],
+  },
+}
+
 export default function AnalyticsPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -63,25 +105,25 @@ export default function AnalyticsPage() {
   const stats: AnalyticsStat[] = [
     {
       label: "Total Calls",
-      value: "0",
+      value: (mockAnalyticsByAvatar[selectedAvatar.id]?.totalCalls ?? 0).toString(),
       change: "+0%",
       icon: <Phone className="h-5 w-5" />,
     },
     {
       label: "Avg Duration",
-      value: "0:00",
+      value: mockAnalyticsByAvatar[selectedAvatar.id]?.avgDuration ?? "0:00",
       change: "+0%",
       icon: <Clock className="h-5 w-5" />,
     },
     {
       label: "Unique Callers",
-      value: "0",
+      value: (mockAnalyticsByAvatar[selectedAvatar.id]?.uniqueCallers ?? 0).toString(),
       change: "+0%",
       icon: <Users className="h-5 w-5" />,
     },
     {
       label: "Conversion Rate",
-      value: "0%",
+      value: mockAnalyticsByAvatar[selectedAvatar.id]?.conversionRate ?? "0%",
       change: "+0%",
       icon: <TrendingUp className="h-5 w-5" />,
     },
@@ -200,23 +242,41 @@ export default function AnalyticsPage() {
               <div>
                 <h2 className="text-xl font-semibold text-foreground">Real Estate KPIs</h2>
                 <p className="text-sm text-muted-foreground">
-                  Additional metrics for the Real Estate persona.
+                  Additional metrics for the Real Estate persona, reflecting Converter / Returner / Phoenix paths.
                 </p>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <Card className="p-6 bg-card border-border">
-                  <p className="text-sm text-muted-foreground">Lead Qualification Rate</p>
-                  <p className="text-3xl font-bold text-foreground mt-2">{percent(reKpis?.lead_qualification_rate)}</p>
-                </Card>
-                <Card className="p-6 bg-card border-border">
-                  <p className="text-sm text-muted-foreground">WhatsApp Response Rate</p>
-                  <p className="text-3xl font-bold text-foreground mt-2">{percent(reKpis?.whatsapp_response_rate)}</p>
-                </Card>
-                <Card className="p-6 bg-card border-border">
-                  <p className="text-sm text-muted-foreground">Lost Re-engagement Rate</p>
-                  <p className="text-3xl font-bold text-foreground mt-2">{percent(reKpis?.lost_reengagement_rate)}</p>
-                </Card>
+                {(() => {
+                  const mock = mockAnalyticsByAvatar[selectedAvatar.id]?.reKpis
+                  const effective = reKpis || mock || {
+                    lead_qualification_rate: 0,
+                    whatsapp_response_rate: 0,
+                    lost_reengagement_rate: 0,
+                  }
+                  return (
+                    <>
+                      <Card className="p-6 bg-card border-border">
+                        <p className="text-sm text-muted-foreground">Lead Qualification Rate</p>
+                        <p className="text-3xl font-bold text-foreground mt-2">
+                          {percent(effective.lead_qualification_rate)}
+                        </p>
+                      </Card>
+                      <Card className="p-6 bg-card border-border">
+                        <p className="text-sm text-muted-foreground">WhatsApp Response Rate</p>
+                        <p className="text-3xl font-bold text-foreground mt-2">
+                          {percent(effective.whatsapp_response_rate)}
+                        </p>
+                      </Card>
+                      <Card className="p-6 bg-card border-border">
+                        <p className="text-sm text-muted-foreground">Lost Re-engagement Rate</p>
+                        <p className="text-3xl font-bold text-foreground mt-2">
+                          {percent(effective.lost_reengagement_rate)}
+                        </p>
+                      </Card>
+                    </>
+                  )
+                })()}
               </div>
 
               {/* Lead Pipeline */}
@@ -229,7 +289,7 @@ export default function AnalyticsPage() {
                     </p>
                   </div>
                 </div>
-                {pipeline?.stages?.length ? (
+                {pipeline?.stages?.length || mockAnalyticsByAvatar[selectedAvatar.id]?.pipeline?.length ? (
                   <ChartContainer
                     id="lead-pipeline"
                     className="h-[320px] w-full"
@@ -237,7 +297,15 @@ export default function AnalyticsPage() {
                       count: { label: "Leads", color: "var(--chart-1)" },
                     }}
                   >
-                    <BarChart data={pipeline.stages} layout="vertical" margin={{ left: 16, right: 16 }}>
+                    <BarChart
+                      data={
+                        pipeline?.stages?.length
+                          ? pipeline.stages
+                          : mockAnalyticsByAvatar[selectedAvatar.id]?.pipeline || []
+                      }
+                      layout="vertical"
+                      margin={{ left: 16, right: 16 }}
+                    >
                       <CartesianGrid horizontal={false} />
                       <YAxis dataKey="stage" type="category" width={110} tickLine={false} axisLine={false} />
                       <XAxis type="number" tickLine={false} axisLine={false} />
