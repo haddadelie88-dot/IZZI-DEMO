@@ -109,6 +109,7 @@ export default function ConfigureAvatar() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const mode = searchParams.get("mode")
+  const clientId = searchParams.get("clientId") || "client"
   
   const [avatarModalOpen, setAvatarModalOpen] = useState(mode === "add")
   const [isDraftMode, setIsDraftMode] = useState(mode === "add")
@@ -414,11 +415,11 @@ export default function ConfigureAvatar() {
   }
 
   const handleViewCallHistory = (avatar: TenantAvatar) => {
-    router.push(`/configure/client/call-history?avatarId=${avatar.id}`)
+    router.push(`/configure/${encodeURIComponent(clientId)}/call-history?avatarId=${avatar.id}`)
   }
 
   const handleViewAnalytics = (avatar: TenantAvatar) => {
-    router.push(`/configure/client/analytics?avatarId=${avatar.id}`)
+    router.push(`/configure/${encodeURIComponent(clientId)}/analytics?avatarId=${avatar.id}`)
   }
 
   const handleAddAvatar = () => {

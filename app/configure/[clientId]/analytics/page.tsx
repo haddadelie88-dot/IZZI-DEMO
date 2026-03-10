@@ -1,8 +1,8 @@
 "use client"
 
 import { useEffect, useMemo, useState } from "react"
-import { useRouter, useSearchParams } from "next/navigation"
-import { BarChart3, ArrowLeft, TrendingUp, Clock, Phone, Users } from "lucide-react"
+import { useParams, useRouter, useSearchParams } from "next/navigation"
+import { BarChart3, ArrowLeft, TrendingUp, Clock, Users, Sparkles } from "lucide-react"
 import { AvatarSidebar, TenantAvatar } from "@/components/admin/avatar-sidebar"
 import { Header } from "@/components/admin/header"
 import { Button } from "@/components/ui/button"
@@ -91,6 +91,8 @@ const mockAnalyticsByAvatar: Record<string, MockAnalytics> = {
 export default function AnalyticsPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
+  const params = useParams<{ clientId: string }>()
+  const clientId = (params?.clientId as string) || "client"
   const avatarId = searchParams.get("avatarId") || "1"
   
   const [avatars] = useState<TenantAvatar[]>(mockAvatars)
@@ -104,25 +106,25 @@ export default function AnalyticsPage() {
 
   const stats: AnalyticsStat[] = [
     {
-      label: "Total Calls",
+      label: "Total Sessions",
       value: (mockAnalyticsByAvatar[selectedAvatar.id]?.totalCalls ?? 0).toString(),
       change: "+0%",
-      icon: <Phone className="h-5 w-5" />,
+      icon: <Sparkles className="h-5 w-5" />,
     },
     {
-      label: "Avg Duration",
+      label: "Avg Session Length",
       value: mockAnalyticsByAvatar[selectedAvatar.id]?.avgDuration ?? "0:00",
       change: "+0%",
       icon: <Clock className="h-5 w-5" />,
     },
     {
-      label: "Unique Callers",
+      label: "Unique Visitors",
       value: (mockAnalyticsByAvatar[selectedAvatar.id]?.uniqueCallers ?? 0).toString(),
       change: "+0%",
       icon: <Users className="h-5 w-5" />,
     },
     {
-      label: "Conversion Rate",
+      label: "Session → Lead Conversion",
       value: mockAnalyticsByAvatar[selectedAvatar.id]?.conversionRate ?? "0%",
       change: "+0%",
       icon: <TrendingUp className="h-5 w-5" />,
@@ -142,7 +144,7 @@ export default function AnalyticsPage() {
   }
 
   const handleViewCallHistory = (avatar: TenantAvatar) => {
-    router.push(`/configure/client/call-history?avatarId=${avatar.id}`)
+    router.push(`/configure/${encodeURIComponent(clientId)}/call-history?avatarId=${avatar.id}`)
   }
 
   const handleViewAnalytics = (avatar: TenantAvatar) => {
@@ -203,10 +205,10 @@ export default function AnalyticsPage() {
           {/* Page Header */}
           <div className="mb-6">
             <h1 className="text-3xl font-bold text-foreground mb-2">
-              Call Analytics - {selectedAvatar.name}
+              Conversation Analytics - {selectedAvatar.name}
             </h1>
             <p className="text-muted-foreground">
-              View performance metrics and insights for this avatar
+              View AI session metrics and insights for this avatar (sessions started from the website CTA).
             </p>
           </div>
 
