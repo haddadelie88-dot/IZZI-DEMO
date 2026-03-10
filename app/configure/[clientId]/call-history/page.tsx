@@ -1,15 +1,14 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { useRouter, useSearchParams } from "next/navigation"
-import { 
-  Phone, 
-  Calendar, 
-  ArrowLeft, 
-  LayoutGrid, 
-  List, 
-  Clock, 
-  User, 
+import { useParams, useRouter, useSearchParams } from "next/navigation"
+import {
+  Calendar,
+  ArrowLeft,
+  LayoutGrid,
+  List,
+  Clock,
+  User,
   X,
   Play,
   Pause,
@@ -18,8 +17,7 @@ import {
   MessageSquare,
   CheckCircle,
   XCircle,
-  PhoneIncoming,
-  PhoneOutgoing
+  Sparkles,
 } from "lucide-react"
 import { AvatarSidebar, TenantAvatar } from "@/components/admin/avatar-sidebar"
 import { Header } from "@/components/admin/header"
@@ -118,7 +116,7 @@ const mockCalls: CallRecord[] = [
     status: "completed",
     direction: "inbound",
     callerName: "Ahmed Al-Rashid",
-    callerPhone: "+971 50 123 4567",
+    callerPhone: "ahmed.alrashid@email.com",
     productType: "Luxury Villa",
     summary: "Caller inquired about a 4-bedroom villa in Palm Jumeirah. Showed interest in properties with sea view and private pool. Budget range discussed was 8-12M AED. Scheduled a property viewing for next Tuesday at 2 PM.",
     transcript: [
@@ -144,7 +142,7 @@ const mockCalls: CallRecord[] = [
     status: "completed",
     direction: "outbound",
     callerName: "Maria Santos",
-    callerPhone: "+971 55 987 6543",
+    callerPhone: "maria.santos@email.com",
     productType: "Apartment",
     summary: "Follow-up call regarding a 2-bedroom apartment in Downtown Dubai. Client confirmed interest and requested a second viewing with their spouse. Meeting scheduled for Friday at 11 AM.",
     transcript: [
@@ -165,7 +163,7 @@ const mockCalls: CallRecord[] = [
     status: "missed",
     direction: "inbound",
     callerName: "Unknown",
-    callerPhone: "+971 52 111 2222",
+    callerPhone: "",
     productType: "Unknown",
     summary: "Missed call. No voicemail left.",
     transcript: [],
@@ -179,7 +177,7 @@ const mockCalls: CallRecord[] = [
     status: "completed",
     direction: "inbound",
     callerName: "James Wilson",
-    callerPhone: "+971 50 555 7890",
+    callerPhone: "james.wilson@company.com",
     productType: "Commercial Space",
     summary: "Inquiry about commercial office space in DIFC. Client looking for 3000-5000 sq ft for a fintech startup. Discussed available options and sent property brochures via email.",
     transcript: [
@@ -198,7 +196,7 @@ const mockCalls: CallRecord[] = [
     status: "completed",
     direction: "inbound",
     callerName: "Fatima Hassan",
-    callerPhone: "+971 56 444 3333",
+    callerPhone: "fatima.hassan@example.com",
     productType: "Townhouse",
     summary: "Client interested in townhouses in Arabian Ranches. Provided information about available units and community amenities. Will send virtual tour links.",
     transcript: [
@@ -211,6 +209,8 @@ const mockCalls: CallRecord[] = [
 export default function CallHistoryPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
+  const params = useParams<{ clientId: string }>()
+  const clientId = (params?.clientId as string) || "client"
   const avatarId = searchParams.get("avatarId") || "1"
   
   const [avatars] = useState<TenantAvatar[]>(mockAvatars)
@@ -230,6 +230,19 @@ export default function CallHistoryPage() {
   const [postSaleEvents, setPostSaleEvents] = useState<PostSaleEvent[]>([])
   
   const [calls] = useState<CallRecord[]>(mockCalls)
+
+  const engagementPathForLogs = (logs: WhatsappLogEntry[]): "Converter" | "Returner" | "Phoenix" => {
+    if (!logs.length) return "Converter"
+    const hasPhoenix =
+      logs.some(
+        (l) =>
+          l.id.toLowerCase().includes("phoenix") ||
+          l.messagePreview.toLowerCase().includes("new listings") ||
+          l.messagePreview.toLowerCase().includes("fresh villas"),
+      )
+    if (hasPhoenix) return "Phoenix"
+    return "Returner"
+  }
 
   const buildWorkflowWhatsappMocks = (call: CallRecord, avatar: TenantAvatar): WhatsappLogEntry[] => {
     // Only mock for the Dar Global / Real Estate persona
@@ -376,7 +389,7 @@ export default function CallHistoryPage() {
   }
 
   const handleViewAnalytics = (avatar: TenantAvatar) => {
-    router.push(`/configure/analytics?avatarId=${avatar.id}`)
+    router.push(`/configure/${encodeURIComponent(clientId)}/analytics?avatarId=${avatar.id}`)
   }
 
   const handleSelectCall = (call: CallRecord) => {
@@ -441,10 +454,10 @@ export default function CallHistoryPage() {
           {/* Page Header */}
           <div className="mb-6">
             <h1 className="text-3xl font-bold text-foreground mb-2">
-              Call History - {selectedAvatar.name}
+              Session History - {selectedAvatar.name}
             </h1>
             <p className="text-primary">
-              {filteredCalls.length} Total Calls Recorded
+              {filteredCalls.length} Total Sessions Recorded
             </p>
           </div>
 
@@ -461,7 +474,7 @@ export default function CallHistoryPage() {
           {/* Filters and View Toggle */}
           <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
             <div className="flex flex-wrap items-center gap-4">
-              <h2 className="text-lg font-semibold">Filter by Date and Duration</h2>
+              <h2 className="text-lg font-semibold">Filter by date and session length</h2>
               <div className="relative">
                 <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
@@ -536,11 +549,7 @@ export default function CallHistoryPage() {
                 >
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex items-center gap-2">
-                      {call.direction === "inbound" ? (
-                        <PhoneIncoming className="h-4 w-4 text-green-600" />
-                      ) : (
-                        <PhoneOutgoing className="h-4 w-4 text-blue-600" />
-                      )}
+                      <Sparkles className="h-4 w-4 text-primary" />
                       {getStatusBadge(call.status)}
                     </div>
                     <span className="text-sm text-muted-foreground">{call.time}</span>
@@ -575,7 +584,7 @@ export default function CallHistoryPage() {
             /* List View */
             <div className="bg-card rounded-lg border border-border overflow-hidden">
               <div className="grid grid-cols-[1fr_150px_100px_120px_100px] gap-4 p-4 bg-muted/50 font-medium text-sm text-muted-foreground border-b border-border">
-                <div>Caller</div>
+                <div>Visitor</div>
                 <div>Date & Time</div>
                 <div>Duration</div>
                 <div>Product</div>
@@ -591,15 +600,13 @@ export default function CallHistoryPage() {
                 >
                   <div className="flex items-center gap-3">
                     <div className="flex items-center justify-center w-8 h-8 rounded-full bg-muted">
-                      {call.direction === "inbound" ? (
-                        <PhoneIncoming className="h-4 w-4 text-green-600" />
-                      ) : (
-                        <PhoneOutgoing className="h-4 w-4 text-blue-600" />
-                      )}
+                      <Sparkles className="h-4 w-4 text-primary" />
                     </div>
                     <div>
                       <p className="font-medium text-foreground">{call.callerName}</p>
-                      <p className="text-sm text-muted-foreground">{call.callerPhone}</p>
+                      {call.callerPhone && (
+                        <p className="text-sm text-muted-foreground">Email: {call.callerPhone}</p>
+                      )}
                     </div>
                   </div>
                   <div className="text-sm">
@@ -652,19 +659,17 @@ export default function CallHistoryPage() {
                     </div>
                     <div>
                       <p className="font-semibold text-foreground">{selectedCall.callerName}</p>
-                      <p className="text-sm text-muted-foreground">{selectedCall.callerPhone}</p>
+                      {selectedCall.callerPhone && (
+                        <p className="text-sm text-muted-foreground">Email: {selectedCall.callerPhone}</p>
+                      )}
                     </div>
                   </div>
 
                   <div className="flex flex-wrap gap-2">
                     {getStatusBadge(selectedCall.status)}
                     <Badge variant="outline" className="flex items-center gap-1">
-                      {selectedCall.direction === "inbound" ? (
-                        <PhoneIncoming className="h-3 w-3" />
-                      ) : (
-                        <PhoneOutgoing className="h-3 w-3" />
-                      )}
-                      {selectedCall.direction === "inbound" ? "Inbound" : "Outbound"}
+                      <Sparkles className="h-3 w-3" />
+                      Web session
                     </Badge>
                     <Badge variant="outline" className="flex items-center gap-1">
                       <Clock className="h-3 w-3" />
@@ -673,6 +678,12 @@ export default function CallHistoryPage() {
                     <Badge className="bg-primary/10 text-foreground border-border">
                       CRM Stage: <span className="ml-1 font-semibold">{crmStage}</span>
                     </Badge>
+                    {whatsappLogs && (
+                      <Badge variant="outline" className="flex items-center gap-1">
+                        <MessageSquare className="h-3 w-3" />
+                        Path: {engagementPathForLogs(whatsappLogs)}
+                      </Badge>
+                    )}
                   </div>
                 </div>
 
