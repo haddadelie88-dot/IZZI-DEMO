@@ -4,6 +4,7 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { Users, Eye, Settings, Plus, Search, LayoutGrid, List } from "lucide-react"
 import { Header } from "@/components/admin/header"
+import { PortalNav } from "@/components/admin/portal-nav"
 import { StatsCard } from "@/components/admin/stats-card"
 import { ClientCard, Client } from "@/components/admin/client-card"
 import { ClientListItem } from "@/components/admin/client-list-item"
@@ -149,6 +150,7 @@ export default function SuperAdminTenantsPage() {
     <div className="flex min-h-screen bg-background">
       <main className="flex-1 flex flex-col">
         <Header />
+        <PortalNav area="super" />
 
         <div className="flex-1 p-8">
           <div className="mb-8">

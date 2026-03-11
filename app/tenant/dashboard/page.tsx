@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import { useSearchParams } from "next/navigation"
 import { BarChart3, Sparkles, TrendingUp, Users, MessageCircle, CheckCircle2 } from "lucide-react"
 import { Header } from "@/components/admin/header"
+import { PortalNav } from "@/components/admin/portal-nav"
 import { Card } from "@/components/ui/card"
 
 type PipelineStage = { stage: string; count: number }
@@ -88,6 +89,7 @@ export default function TenantDashboardPage() {
     <div className="flex min-h-screen bg-background">
       <main className="flex-1 flex flex-col">
         <Header />
+        <PortalNav area="tenant" />
 
         <div className="flex-1 p-8 space-y-8">
           <div>

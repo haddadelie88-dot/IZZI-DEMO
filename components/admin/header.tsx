@@ -1,7 +1,7 @@
 "use client"
 
 import { LogOut } from "lucide-react"
-import { usePathname, useRouter } from "next/navigation"
+import { usePathname } from "next/navigation"
 import { Button } from "@/components/ui/button"
 
 interface HeaderProps {
@@ -10,7 +10,6 @@ interface HeaderProps {
 }
 
 export function Header({ showSave, onSave }: HeaderProps) {
-  const router = useRouter()
   const pathname = usePathname()
 
   const currentRole: "super" | "tenant" | "none" =
@@ -18,11 +17,18 @@ export function Header({ showSave, onSave }: HeaderProps) {
 
   const handleRoleChange = (role: "super" | "tenant") => {
     if (role === currentRole) return
-    if (role === "super") {
-      router.push("/super-admin/tenants")
-    } else {
-      router.push("/tenant/dashboard")
-    }
+    const tenantCookie = document.cookie
+      .split("; ")
+      .find((c) => c.startsWith("izzi_demo_tenant="))
+      ?.split("=")[1]
+    const tenantId = tenantCookie || "dar-global"
+    const target =
+      role === "super"
+        ? "/super-admin/tenants"
+        : `/tenant/dashboard?tenantId=${encodeURIComponent(tenantId)}`
+    // Next.js dev router can occasionally fail to fetch flight data while recompiling.
+    // Use full-page navigation for role switching to avoid runtime navigation fetch errors.
+    window.location.assign(target)
   }
 
   return (
