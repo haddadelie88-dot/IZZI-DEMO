@@ -9,6 +9,11 @@ export type WhatsappLogEntry = {
   status: "Sent" | "Delivered" | "Failed"
   leadPhone?: string
   messagePreview: string
+  // Optional fields to help model the full lead journey
+  // In this POC, sessionId effectively acts as the leadId as well.
+  parentSessionId?: string
+  engagementPath?: "Converter" | "Returner" | "Phoenix"
+  resumeUrl?: string
 }
 
 type StoreShape = WhatsappLogEntry[]
@@ -36,6 +41,9 @@ export async function POST(req: Request) {
     status: body.status || "Sent",
     leadPhone: body.leadPhone,
     messagePreview: body.messagePreview,
+    parentSessionId: body.parentSessionId,
+    engagementPath: body.engagementPath,
+    resumeUrl: body.resumeUrl,
   }
   store.push(entry)
   await writeStore(STORE_NAME, store)

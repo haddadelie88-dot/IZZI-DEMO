@@ -52,6 +52,9 @@ type WhatsappLogEntry = {
   sentAt: string
   status: "Sent" | "Delivered" | "Failed"
   messagePreview: string
+  parentSessionId?: string
+  engagementPath?: "Converter" | "Returner" | "Phoenix"
+  resumeUrl?: string
 }
 
 type PostSaleEvent = {
@@ -233,6 +236,8 @@ export default function CallHistoryPage() {
 
   const engagementPathForLogs = (logs: WhatsappLogEntry[]): "Converter" | "Returner" | "Phoenix" => {
     if (!logs.length) return "Converter"
+    const explicit = logs.find((l) => l.engagementPath)
+    if (explicit?.engagementPath) return explicit.engagementPath
     const hasPhoenix =
       logs.some(
         (l) =>
@@ -268,6 +273,7 @@ export default function CallHistoryPage() {
             status: "Sent",
             messagePreview:
               "Hi Maria, thanks for your time earlier about the Downtown apartment. Ready to continue where we left off?",
+            engagementPath: "Returner",
           },
           {
             id: "mock-wp-2-returner",
@@ -277,6 +283,9 @@ export default function CallHistoryPage() {
             status: "Delivered",
             messagePreview:
               "Hi Maria, I’ve shortlisted the 3 apartments you liked — tap to return to IZZI and confirm your preferred unit.",
+            engagementPath: "Returner",
+            parentSessionId: call.id,
+            resumeUrl: `/izzi/session/returner?sessionId=${encodeURIComponent(call.id)}`,
           },
         ]
       // Phoenix: RTB after Day‑7 revival
@@ -290,6 +299,7 @@ export default function CallHistoryPage() {
             status: "Sent",
             messagePreview:
               "Hi there, thanks for speaking with IZZI earlier. I’m here if you’d like to continue exploring Dubai properties.",
+            engagementPath: "Phoenix",
           },
           {
             id: "mock-wp-3-phoenix",
@@ -299,6 +309,9 @@ export default function CallHistoryPage() {
             status: "Delivered",
             messagePreview:
               "Hi again, we’ve just added 2 new listings that match your criteria. Tap to see fresh villas and continue with IZZI.",
+            engagementPath: "Phoenix",
+            parentSessionId: call.id,
+            resumeUrl: `/izzi/session/phoenix?sessionId=${encodeURIComponent(call.id)}`,
           },
         ]
       default:
@@ -810,30 +823,30 @@ export default function CallHistoryPage() {
                       No WhatsApp messages logged for this session yet.
                     </div>
                   ) : (
-                    <div className="rounded-lg border border-border overflow-hidden">
-                      <Table>
-                        <TableHeader>
-                          <TableRow className="bg-muted/40">
-                            <TableHead>Type</TableHead>
-                            <TableHead>Sent at</TableHead>
-                            <TableHead>Status</TableHead>
-                            <TableHead className="text-right">Preview</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {whatsappLogs.map((row) => (
-                            <TableRow key={row.id}>
-                              <TableCell className="font-medium">
-                                {row.messageType === "post_call"
-                                  ? "Post-call"
-                                  : row.messageType === "reengagement"
-                                    ? "Re-engagement"
-                                    : "Test"}
-                              </TableCell>
-                              <TableCell className="text-muted-foreground">
-                                {new Date(row.sentAt).toLocaleString()}
-                              </TableCell>
-                              <TableCell>
+                    <div className="rounded-lg border border-border bg-muted/20 p-4 space-y-4">
+                      {whatsappLogs
+                        .slice()
+                        .sort((a, b) => b.sentAt.localeCompare(a.sentAt))
+                        .map((row) => (
+                          <div key={row.id} className="flex items-start gap-3">
+                            <div className="mt-1 flex h-8 w-8 items-center justify-center rounded-full bg-card border border-border">
+                              {row.messageType === "post_call" ? (
+                                <MessageSquare className="h-4 w-4 text-primary" />
+                              ) : row.messageType === "reengagement" ? (
+                                <Sparkles className="h-4 w-4 text-primary" />
+                              ) : (
+                                <MessageSquare className="h-4 w-4 text-muted-foreground" />
+                              )}
+                            </div>
+                            <div className="flex-1 space-y-1">
+                              <div className="flex items-center gap-2">
+                                <span className="text-sm font-medium text-foreground">
+                                  {row.messageType === "post_call"
+                                    ? "Post-call follow-up"
+                                    : row.messageType === "reengagement"
+                                      ? "Re-engagement message"
+                                      : "Test message"}
+                                </span>
                                 <Badge
                                   className={
                                     row.status === "Failed"
@@ -845,17 +858,87 @@ export default function CallHistoryPage() {
                                 >
                                   {row.status}
                                 </Badge>
-                              </TableCell>
-                              <TableCell className="text-right text-muted-foreground max-w-[220px] truncate">
+                              </div>
+                              <p className="text-xs text-muted-foreground">
+                                {new Date(row.sentAt).toLocaleString()}
+                              </p>
+                              <p className="text-sm text-muted-foreground leading-relaxed">
                                 {row.messagePreview}
-                              </TableCell>
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
+                              </p>
+                              {row.resumeUrl && (
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  className="mt-1 h-8 px-3 text-xs"
+                                  onClick={() => {
+                                    // POC: we do not actually open a new tab, just surface intent.
+                                    window.alert(
+                                      "In production, this button opens an IZZI session with full context using the secure link: " +
+                                        row.resumeUrl,
+                                    )
+                                  }}
+                                >
+                                  Resume with IZZI (mock)
+                                </Button>
+                              )}
+                            </div>
+                          </div>
+                        ))}
                     </div>
                   )}
                 </div>
+
+                {/* Re-engagement Sessions (conceptual for POC) */}
+                {whatsappLogs.some((l) => l.messageType === "reengagement") && (
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2">
+                      <Sparkles className="h-4 w-4 text-primary" />
+                      <span className="font-medium text-foreground">Re-engagement Sessions (Returner / Phoenix)</span>
+                    </div>
+                    <div className="space-y-2">
+                      {whatsappLogs
+                        .filter((l) => l.messageType === "reengagement")
+                        .map((l, idx) => (
+                          <div
+                            key={l.id}
+                            className="rounded-lg border border-border bg-muted/30 p-3 flex items-center justify-between gap-3"
+                          >
+                            <div>
+                              <p className="text-sm font-medium text-foreground">
+                                Session #{idx + 2} ·{" "}
+                                {l.engagementPath === "Phoenix"
+                                  ? "Phoenix (Day 7 revival)"
+                                  : "Returner (WhatsApp re-entry)"}
+                              </p>
+                              <p className="text-xs text-muted-foreground">
+                                Started from WhatsApp link sent on{" "}
+                                {new Date(l.sentAt).toLocaleDateString("en-US", {
+                                  month: "short",
+                                  day: "numeric",
+                                  year: "numeric",
+                                })}
+                                .
+                              </p>
+                            </div>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              className="h-8 px-3 text-xs"
+                              onClick={() => {
+                                window.alert(
+                                  "In production, this would open the follow-up IZZI session with full context for this lead.",
+                                )
+                              }}
+                            >
+                              View journey (mock)
+                            </Button>
+                          </div>
+                        ))}
+                    </div>
+                  </div>
+                )}
 
                 {/* Post-Sale Journey */}
                 {crmStage === "Closed" && (
