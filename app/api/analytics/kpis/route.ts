@@ -18,19 +18,20 @@ type SessionRow = {
 export async function GET() {
   const sessions = await readStore<SessionRow[]>("sessions", [])
   const wa = await readStore<WhatsappLogEntry[]>("whatsapp-log", [])
+  const stageOf = (value?: string) => (value || "").trim().toUpperCase().replace(/\s+/g, "_")
 
   const totalCalls = sessions.length || 1
   const readyToBuyCount = sessions.filter((s) => s.readyToBuy).length
   const dropOffCount = sessions.filter(
     (s) =>
-      s.crmStage === "Out of Scope" ||
-      s.leadStatus === "Out of Scope" ||
+      stageOf(s.crmStage) === "OFF_TOPIC" ||
+      stageOf(s.leadStatus) === "OFF_TOPIC" ||
       s.crmStage === "Drop-off" ||
       s.leadStatus === "Drop-off",
   ).length
   const topicGuardCount = sessions.filter((s) => s.topicGuardTriggered || s.topicFlagged).length
-  const rtbCount = sessions.filter((s) => s.crmStage === "RTB" || s.leadStatus === "RTB" || s.readyToBuy).length
-  const closedCount = sessions.filter((s) => s.crmStage === "Closed" || s.leadStatus === "Closed").length
+  const rtbCount = sessions.filter((s) => stageOf(s.crmStage) === "RTB" || stageOf(s.leadStatus) === "RTB" || s.readyToBuy).length
+  const closedCount = sessions.filter((s) => stageOf(s.crmStage) === "CLOSED" || stageOf(s.leadStatus) === "CLOSED").length
   const avgSeconds =
     sessions.reduce((sum, row) => sum + (row.durationSeconds || row.durationSec || 0), 0) / totalCalls
 

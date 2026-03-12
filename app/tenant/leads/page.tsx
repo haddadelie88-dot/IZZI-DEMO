@@ -8,7 +8,6 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import {
   Table,
   TableBody,
@@ -26,7 +25,7 @@ type LeadRow = {
   phone: string
   product: string
   budget: string
-  stage: "New" | "Contacted" | "RTB" | "Negotiating" | "Closed" | "Lost" | "Out of Scope"
+  stage: "OPEN" | "RTB" | "OFF_TOPIC" | "CONTACTED" | "NEGOTIATING" | "CLOSED" | "LOST"
 }
 
 type LeadSession = {
@@ -162,7 +161,7 @@ const mockLeadSessions: LeadSession[] = [
     avatarName: "Noura",
     startedAt: "2026-03-09 10:30",
     duration: "4:32",
-    stageAtSession: "Contacted",
+    stageAtSession: "CONTACTED",
     summary: "Initial discovery conversation. Lead asked for Palm Jumeirah inventory and shared budget.",
     transcriptPreview: "Lead asked for 4BR sea-view villa options and requested shortlisting.",
     whatsappEvents: ["Post-call follow-up sent (30 min)", "Lead clicked re-entry link"],
@@ -170,8 +169,8 @@ const mockLeadSessions: LeadSession[] = [
   {
     id: "s-102",
     leadId: "1",
-    avatarId: "1",
-    avatarName: "Sarah",
+    avatarId: "2",
+    avatarName: "Noura",
     startedAt: "2026-03-10 13:10",
     duration: "3:54",
     stageAtSession: "RTB",
@@ -182,12 +181,12 @@ const mockLeadSessions: LeadSession[] = [
   {
     id: "s-103",
     leadId: "1",
-    avatarId: "9",
-    avatarName: "Maya",
+    avatarId: "2",
+    avatarName: "Noura",
     avatarDeleted: true,
     startedAt: "2026-03-11 16:20",
     duration: "2:45",
-    stageAtSession: "Negotiating",
+    stageAtSession: "NEGOTIATING",
     summary: "Legacy avatar session from before avatar retirement. Negotiation notes captured.",
     transcriptPreview: "Lead discussed preferred payment milestones and timeline flexibility.",
     whatsappEvents: ["Negotiation reminder delivered"],
@@ -199,7 +198,7 @@ const mockLeadSessions: LeadSession[] = [
     avatarName: "Noura",
     startedAt: "2026-03-08 11:10",
     duration: "2:51",
-    stageAtSession: "Contacted",
+    stageAtSession: "CONTACTED",
     summary: "Lead requested Downtown apartment comparison.",
     transcriptPreview: "Lead shortlisted 2 units and asked for ROI details.",
     whatsappEvents: ["Post-call follow-up sent"],
@@ -211,7 +210,7 @@ const mockLeadSessions: LeadSession[] = [
     avatarName: "Noura",
     startedAt: "2026-03-10 14:40",
     duration: "3:12",
-    stageAtSession: "Negotiating",
+    stageAtSession: "NEGOTIATING",
     summary: "Lead returned from WhatsApp and moved into negotiation.",
     transcriptPreview: "Discussion focused on final pricing and payment sequence.",
     whatsappEvents: ["Re-engagement link clicked", "Sales handover prepared"],
@@ -219,17 +218,24 @@ const mockLeadSessions: LeadSession[] = [
 ]
 
 export default function TenantLeadsPage() {
+  const stageLabel = (stage: LeadRow["stage"]) => {
+    if (stage === "OFF_TOPIC") return "OFF TOPIC"
+    return stage
+  }
+
   const [query, setQuery] = useState("")
   const [rows, setRows] = useState<LeadRow[]>([])
   const [selectedLead, setSelectedLead] = useState<LeadRow | null>(null)
-  const [avatarFilter, setAvatarFilter] = useState<string>("all")
 
   useEffect(() => {
     async function load() {
       const stageMap = new Map<string, LeadRow["stage"]>()
-      const res = await fetch("/api/analytics/lead-pipeline?agent_id=noura").catch(() => null)
-      if (res?.ok) {
-        // pipeline endpoint is aggregate only; we keep per-lead mock stage defaults for POC.
+      const leadsRes = await fetch("/api/leads?tenantId=dar-global").catch(() => null)
+      if (leadsRes?.ok) {
+        const rows = (await leadsRes.json().catch(() => [])) as { id: string; crmStage: LeadRow["stage"] }[]
+        rows.forEach((r) => {
+          stageMap.set(r.id, r.crmStage)
+        })
       }
 
       setRows(
@@ -240,16 +246,16 @@ export default function TenantLeadsPage() {
             (index % 7 === 0
               ? "RTB"
               : index % 7 === 1
-                ? "Negotiating"
+                ? "NEGOTIATING"
                 : index % 7 === 2
-                  ? "Contacted"
+                  ? "CONTACTED"
                   : index % 7 === 3
-                    ? "Closed"
+                    ? "CLOSED"
                     : index % 7 === 4
-                      ? "New"
+                      ? "OPEN"
                       : index % 7 === 5
-                        ? "Lost"
-                        : "Out of Scope"),
+                        ? "LOST"
+                        : "OFF_TOPIC"),
         })),
       )
     }
@@ -270,22 +276,9 @@ export default function TenantLeadsPage() {
 
   const selectedLeadSessions = useMemo(() => {
     if (!selectedLead) return []
-    const sessions = mockLeadSessions
-      .filter((s) => s.leadId === selectedLead.id)
-      .sort((a, b) => b.startedAt.localeCompare(a.startedAt))
-    return avatarFilter === "all" ? sessions : sessions.filter((s) => s.avatarId === avatarFilter)
-  }, [selectedLead, avatarFilter])
-
-  const selectedLeadAvatarOptions = useMemo(() => {
-    if (!selectedLead) return []
-    const seen = new Set<string>()
     return mockLeadSessions
       .filter((s) => s.leadId === selectedLead.id)
-      .filter((s) => {
-        if (seen.has(s.avatarId)) return false
-        seen.add(s.avatarId)
-        return true
-      })
+      .sort((a, b) => b.startedAt.localeCompare(a.startedAt))
   }, [selectedLead])
 
   return (
@@ -304,7 +297,7 @@ export default function TenantLeadsPage() {
 
           <Card className="p-4 bg-muted/20 border-border">
             <p className="text-sm text-foreground">
-              Use this page for CRM lead lifecycle. Use <span className="font-semibold">Sessions</span> page for each individual conversation instance.
+              Use this page for the full CRM lead lifecycle and all linked interaction sessions.
             </p>
           </Card>
 
@@ -341,7 +334,7 @@ export default function TenantLeadsPage() {
                     <TableCell>{row.product}</TableCell>
                     <TableCell>{row.budget}</TableCell>
                     <TableCell>
-                      <Badge variant="outline">{row.stage}</Badge>
+                      <Badge variant="outline">{stageLabel(row.stage)}</Badge>
                     </TableCell>
                     <TableCell className="text-right">
                       <Button
@@ -349,10 +342,9 @@ export default function TenantLeadsPage() {
                         size="sm"
                         onClick={() => {
                           setSelectedLead(row)
-                          setAvatarFilter("all")
                         }}
                       >
-                        View Session Detail
+                        View Lead Journey
                       </Button>
                     </TableCell>
                   </TableRow>
@@ -381,7 +373,7 @@ export default function TenantLeadsPage() {
             </div>
             <div className="p-5 space-y-4 overflow-y-auto">
               <div className="flex flex-wrap gap-2">
-                <Badge variant="outline">{selectedLead.stage}</Badge>
+                <Badge variant="outline">{stageLabel(selectedLead.stage)}</Badge>
                 <Badge variant="outline">{selectedLead.product}</Badge>
               </div>
               <Card className="p-4 border-border">
@@ -397,32 +389,15 @@ export default function TenantLeadsPage() {
                   <div>
                     <p className="text-sm font-medium text-foreground">Lead Journey Sessions</p>
                     <p className="text-xs text-muted-foreground">
-                      A single lead can have multiple sessions over time across different avatars.
+                      A single lead can have multiple sessions over time, all handled by the same assigned avatar.
                     </p>
                   </div>
                   <Badge variant="outline">{selectedLeadSessions.length} sessions</Badge>
                 </div>
 
-                <div className="max-w-[220px]">
-                  <Select value={avatarFilter} onValueChange={setAvatarFilter}>
-                    <SelectTrigger className="h-8">
-                      <SelectValue placeholder="Filter by avatar" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All avatars</SelectItem>
-                      {selectedLeadAvatarOptions.map((avatar) => (
-                        <SelectItem key={avatar.avatarId} value={avatar.avatarId}>
-                          {avatar.avatarName}
-                          {avatar.avatarDeleted ? " (Deleted)" : ""}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
                 {selectedLeadSessions.length === 0 ? (
                   <div className="rounded-lg border border-border bg-muted/20 p-3 text-sm text-muted-foreground">
-                    No sessions found for this lead under the selected avatar filter.
+                    No sessions found for this lead yet.
                   </div>
                 ) : (
                   <div className="space-y-3">
@@ -431,7 +406,7 @@ export default function TenantLeadsPage() {
                         <div className="flex flex-wrap items-center gap-2">
                           <Badge variant="outline">{session.startedAt}</Badge>
                           <Badge variant="outline">Duration: {session.duration}</Badge>
-                          <Badge variant="outline">Stage: {session.stageAtSession}</Badge>
+                          <Badge variant="outline">Stage: {stageLabel(session.stageAtSession)}</Badge>
                         </div>
                         <p className="text-xs text-muted-foreground">
                           Avatar: <span className="text-foreground font-medium">{session.avatarName}</span>
