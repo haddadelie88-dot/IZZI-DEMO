@@ -12,7 +12,7 @@ export type WhatsappLogEntry = {
   // Optional fields to help model the full lead journey
   // In this POC, sessionId effectively acts as the leadId as well.
   parentSessionId?: string
-  engagementPath?: "Converter" | "Returner" | "Phoenix"
+  engagementPath?: "Immediate RTB" | "Follow-up Re-entry" | "Day 7 Re-engagement"
   resumeUrl?: string
 }
 

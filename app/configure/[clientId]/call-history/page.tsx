@@ -42,7 +42,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 
-const crmStages = ["New", "Contacted", "Qualified", "Negotiating", "Closed", "Lost"] as const
+const crmStages = ["New", "Contacted", "RTB", "Negotiating", "Closed", "Lost", "Out of Scope"] as const
 type CrmStage = (typeof crmStages)[number]
 
 type WhatsappLogEntry = {
@@ -53,7 +53,7 @@ type WhatsappLogEntry = {
   status: "Sent" | "Delivered" | "Failed"
   messagePreview: string
   parentSessionId?: string
-  engagementPath?: "Converter" | "Returner" | "Phoenix"
+  engagementPath?: "Immediate RTB" | "Follow-up Re-entry" | "Day 7 Re-engagement"
   resumeUrl?: string
 }
 
@@ -350,21 +350,6 @@ export default function CallHistoryPage() {
   
   const [calls] = useState<CallRecord[]>(mockCalls)
 
-  const engagementPathForLogs = (logs: WhatsappLogEntry[]): "Converter" | "Returner" | "Phoenix" => {
-    if (!logs.length) return "Converter"
-    const explicit = logs.find((l) => l.engagementPath)
-    if (explicit?.engagementPath) return explicit.engagementPath
-    const hasPhoenix =
-      logs.some(
-        (l) =>
-          l.id.toLowerCase().includes("phoenix") ||
-          l.messagePreview.toLowerCase().includes("new listings") ||
-          l.messagePreview.toLowerCase().includes("fresh villas"),
-      )
-    if (hasPhoenix) return "Phoenix"
-    return "Returner"
-  }
-
   const buildWorkflowWhatsappMocks = (call: CallRecord, avatar: TenantAvatar): WhatsappLogEntry[] => {
     // Only mock for the Dar Global / Real Estate persona
     if (avatar.industry !== "Real Estate") return []
@@ -373,12 +358,12 @@ export default function CallHistoryPage() {
     const mkTime = (offsetMinutes: number) =>
       new Date(baseTime + offsetMinutes * 60_000).toISOString()
 
-    // Map specific mock calls to workflow paths
+    // Map specific mock calls to lifecycle-based follow-up patterns
     switch (call.id) {
-      // Converter: clear RTB during the live call -> no WhatsApp needed
+      // Immediate RTB in live session -> no WhatsApp needed
       case "1":
         return []
-      // Returner: RTB after WhatsApp follow-up click
+      // Follow-up re-entry: RTB after WhatsApp click
       case "2":
         return [
           {
@@ -389,7 +374,7 @@ export default function CallHistoryPage() {
             status: "Sent",
             messagePreview:
               "Hi Maria, thanks for your time earlier about the Downtown apartment. Ready to continue where we left off?",
-            engagementPath: "Returner",
+            engagementPath: "Follow-up Re-entry",
           },
           {
             id: "mock-wp-2-returner",
@@ -399,12 +384,12 @@ export default function CallHistoryPage() {
             status: "Delivered",
             messagePreview:
               "Hi Maria, I’ve shortlisted the 3 apartments you liked — tap to return to IZZI and confirm your preferred unit.",
-            engagementPath: "Returner",
+            engagementPath: "Follow-up Re-entry",
             parentSessionId: call.id,
             resumeUrl: `/izzi/session/returner?sessionId=${encodeURIComponent(call.id)}`,
           },
         ]
-      // Phoenix: RTB after Day‑7 revival
+      // Day 7 re-engagement: RTB after delayed revival
       case "3":
         return [
           {
@@ -415,7 +400,7 @@ export default function CallHistoryPage() {
             status: "Sent",
             messagePreview:
               "Hi there, thanks for speaking with IZZI earlier. I’m here if you’d like to continue exploring Dubai properties.",
-            engagementPath: "Phoenix",
+            engagementPath: "Day 7 Re-engagement",
           },
           {
             id: "mock-wp-3-phoenix",
@@ -425,7 +410,7 @@ export default function CallHistoryPage() {
             status: "Delivered",
             messagePreview:
               "Hi again, we’ve just added 2 new listings that match your criteria. Tap to see fresh villas and continue with IZZI.",
-            engagementPath: "Phoenix",
+            engagementPath: "Day 7 Re-engagement",
             parentSessionId: call.id,
             resumeUrl: `/izzi/session/phoenix?sessionId=${encodeURIComponent(call.id)}`,
           },
@@ -807,12 +792,6 @@ export default function CallHistoryPage() {
                     <Badge className="bg-primary/10 text-foreground border-border">
                       CRM Stage: <span className="ml-1 font-semibold">{crmStage}</span>
                     </Badge>
-                    {whatsappLogs && (
-                      <Badge variant="outline" className="flex items-center gap-1">
-                        <MessageSquare className="h-3 w-3" />
-                        Path: {engagementPathForLogs(whatsappLogs)}
-                      </Badge>
-                    )}
                   </div>
                 </div>
 
@@ -1010,7 +989,7 @@ export default function CallHistoryPage() {
                   <div className="space-y-3">
                     <div className="flex items-center gap-2">
                       <Sparkles className="h-4 w-4 text-primary" />
-                      <span className="font-medium text-foreground">Re-engagement Sessions (Returner / Phoenix)</span>
+                      <span className="font-medium text-foreground">Re-engagement Sessions</span>
                     </div>
                     <div className="space-y-2">
                       {whatsappLogs
@@ -1023,9 +1002,9 @@ export default function CallHistoryPage() {
                             <div>
                               <p className="text-sm font-medium text-foreground">
                                 Session #{idx + 2} ·{" "}
-                                {l.engagementPath === "Phoenix"
-                                  ? "Phoenix (Day 7 revival)"
-                                  : "Returner (WhatsApp re-entry)"}
+                                {l.engagementPath === "Day 7 Re-engagement"
+                                  ? "Day 7 re-engagement"
+                                  : "Follow-up re-entry"}
                               </p>
                               <p className="text-xs text-muted-foreground">
                                 Started from WhatsApp link sent on{" "}

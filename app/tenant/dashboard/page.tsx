@@ -17,9 +17,9 @@ export default function TenantDashboardPage() {
   const [pipeline, setPipeline] = useState<PipelineStage[]>([])
   const [leadKpis, setLeadKpis] = useState<{
     totalLeads: number
-    qualifiedLeads: number
+    rtbLeads: number
     closedDeals: number
-  }>({ totalLeads: 0, qualifiedLeads: 0, closedDeals: 0 })
+  }>({ totalLeads: 0, rtbLeads: 0, closedDeals: 0 })
   const [whatsappKpis, setWhatsappKpis] = useState<{
     whatsappResponseRate: number
     lostReengagementRate: number
@@ -68,15 +68,15 @@ export default function TenantDashboardPage() {
   useEffect(() => {
     if (!pipeline.length) return
     const total = pipeline.reduce((sum, p) => sum + p.count, 0)
-    const qualifiedStages = new Set(["Qualified", "Negotiating", "Closed"])
-    const qualified = pipeline
-      .filter((p) => qualifiedStages.has(p.stage))
+    const rtbStages = new Set(["RTB", "Negotiating", "Closed"])
+    const rtb = pipeline
+      .filter((p) => rtbStages.has(p.stage))
       .reduce((sum, p) => sum + p.count, 0)
     const closed = pipeline.find((p) => p.stage === "Closed")?.count ?? 0
 
     setLeadKpis({
       totalLeads: total,
-      qualifiedLeads: qualified,
+      rtbLeads: rtb,
       closedDeals: closed,
     })
   }, [pipeline])
@@ -91,10 +91,9 @@ export default function TenantDashboardPage() {
     return "0%"
   }
 
-  const converterCount = leadKpis.qualifiedLeads // POC heuristic
-  const returnerCount = Math.round(converterCount * 0.3)
-  const phoenixCount = Math.round(converterCount * 0.2)
-  const totalPathLeads = converterCount + returnerCount + phoenixCount || 1
+  const rtbCount = pipeline.find((p) => p.stage === "RTB")?.count ?? leadKpis.rtbLeads
+  const negotiatingCount = pipeline.find((p) => p.stage === "Negotiating")?.count ?? 0
+  const outOfScopeCount = pipeline.find((p) => p.stage === "Out of Scope")?.count ?? 0
 
   return (
     <div className="flex min-h-screen bg-background">
@@ -107,7 +106,7 @@ export default function TenantDashboardPage() {
             <h1 className="text-3xl font-bold text-foreground mb-1">Dar Global Dashboard</h1>
             <p className="text-sm text-muted-foreground">
               Tenant: <span className="font-medium text-foreground">{tenantId}</span> · Real Estate workflow overview
-              (Converter / Returner / Phoenix).
+              with unified lifecycle stages.
             </p>
           </div>
 
@@ -131,7 +130,7 @@ export default function TenantDashboardPage() {
                 <Sparkles className="h-4 w-4 text-primary" />
               </div>
               <p className="text-2xl font-bold text-foreground">
-                {Math.max(leadKpis.totalLeads, leadKpis.qualifiedLeads)}
+                {Math.max(leadKpis.totalLeads, leadKpis.rtbLeads)}
               </p>
             </Card>
 
@@ -140,9 +139,9 @@ export default function TenantDashboardPage() {
                 <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">RTB Leads</span>
                 <CheckCircle2 className="h-4 w-4 text-primary" />
               </div>
-              <p className="text-2xl font-bold text-foreground">{leadKpis.qualifiedLeads}</p>
+              <p className="text-2xl font-bold text-foreground">{leadKpis.rtbLeads}</p>
               <p className="text-xs text-muted-foreground mt-1">
-                Lead Qualification Rate: {percent(leadKpis.qualifiedLeads, leadKpis.totalLeads)}
+                Lead Qualification Rate: {percent(leadKpis.rtbLeads, leadKpis.totalLeads)}
               </p>
             </Card>
 
@@ -183,9 +182,7 @@ export default function TenantDashboardPage() {
 
             <Card className="p-5 bg-card border-border">
               <div className="flex items-center justify-between mb-3">
-                <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                  Lost Lead Re-engagement Rate (Phoenix)
-                </span>
+                <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Lost Lead Re-engagement Rate</span>
                 <Sparkles className="h-4 w-4 text-primary" />
               </div>
               <p className="text-2xl font-bold text-foreground">
@@ -206,40 +203,40 @@ export default function TenantDashboardPage() {
             </Card>
           </div>
 
-          {/* Engagement Paths */}
+          {/* Lifecycle Stage Focus */}
           <div className="space-y-3">
-            <h2 className="text-lg font-semibold text-foreground">Engagement Paths</h2>
+            <h2 className="text-lg font-semibold text-foreground">Lifecycle Stage Focus</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <Card className="p-5 bg-card border-border">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="font-medium text-foreground">Converter</span>
+                  <span className="font-medium text-foreground">RTB</span>
                   <Sparkles className="h-4 w-4 text-primary" />
                 </div>
-                <p className="text-2xl font-bold text-foreground">{converterCount}</p>
+                <p className="text-2xl font-bold text-foreground">{rtbCount}</p>
                 <p className="text-xs text-muted-foreground mt-1">
-                  {percent(converterCount, totalPathLeads)} of RTB leads convert during the live session.
+                  Leads that reached Ready-to-Buy and can be handed to sales.
                 </p>
               </Card>
 
               <Card className="p-5 bg-card border-border">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="font-medium text-foreground">Returner</span>
+                  <span className="font-medium text-foreground">Negotiating</span>
                   <MessageCircle className="h-4 w-4 text-primary" />
                 </div>
-                <p className="text-2xl font-bold text-foreground">{returnerCount}</p>
+                <p className="text-2xl font-bold text-foreground">{negotiatingCount}</p>
                 <p className="text-xs text-muted-foreground mt-1">
-                  {percent(returnerCount, totalPathLeads)} of RTB leads come back via WhatsApp follow-up.
+                  Leads currently in active human negotiation pipeline.
                 </p>
               </Card>
 
               <Card className="p-5 bg-card border-border">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="font-medium text-foreground">Phoenix</span>
+                  <span className="font-medium text-foreground">Out of Scope</span>
                   <Sparkles className="h-4 w-4 text-primary" />
                 </div>
-                <p className="text-2xl font-bold text-foreground">{phoenixCount}</p>
+                <p className="text-2xl font-bold text-foreground">{outOfScopeCount}</p>
                 <p className="text-xs text-muted-foreground mt-1">
-                  {percent(phoenixCount, totalPathLeads)} of RTB leads are revived from previously lost.
+                  Sessions flagged by topic guard or non-sales intent.
                 </p>
               </Card>
             </div>

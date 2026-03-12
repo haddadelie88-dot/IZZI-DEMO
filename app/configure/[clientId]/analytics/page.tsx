@@ -70,20 +70,20 @@ const mockAnalyticsByAvatar: Record<string, MockAnalytics> = {
     uniqueCallers: 24,
     conversionRate: "31%",
     reKpis: {
-      // Qualified / RTB over total
+      // RTB and later over total
       lead_qualification_rate: 0.56,
-      // Returner + Phoenix responses over total WhatsApp sends
+      // Re-engagement responses over total WhatsApp sends
       whatsapp_response_rate: 0.48,
-      // Phoenix conversions over Lost leads
+      // Day 7 revival conversions over Lost leads
       lost_reengagement_rate: 0.32,
     },
     pipeline: [
       { stage: "New", count: 10 },
       { stage: "Contacted", count: 7 },
-      { stage: "Qualified", count: 6 }, // RTB
+      { stage: "RTB", count: 6 },
       { stage: "Negotiating", count: 4 },
       { stage: "Closed", count: 3 },
-      { stage: "Lost", count: 2 }, // feeds Phoenix path
+      { stage: "Lost", count: 2 },
     ],
   },
 }
@@ -244,7 +244,7 @@ export default function AnalyticsPage() {
               <div>
                 <h2 className="text-xl font-semibold text-foreground">Real Estate KPIs</h2>
                 <p className="text-sm text-muted-foreground">
-                  Additional metrics for the Real Estate persona, reflecting Converter / Returner / Phoenix paths.
+                  Additional metrics for the Real Estate persona, aligned to lifecycle stages and re-engagement.
                 </p>
               </div>
 

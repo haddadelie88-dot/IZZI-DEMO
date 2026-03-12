@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import { readStore } from "@/lib/poc-store"
 
-type LeadStage = "New" | "Contacted" | "Qualified" | "Negotiating" | "Closed" | "Lost"
+type LeadStage = "New" | "Contacted" | "RTB" | "Negotiating" | "Closed" | "Lost" | "Out of Scope"
 type LeadStageStore = Record<string, { leadId: string; stage: LeadStage; updatedAt: string }>
 
 type WhatsappLogEntry = {
@@ -21,8 +21,8 @@ export async function GET(req: Request) {
   const stageStore = await readStore<LeadStageStore>("crm-lead-stage", {})
   const leads = Object.values(stageStore)
   const totalLeads = leads.length
-  const qualifiedLeads = leads.filter((l) => ["Qualified", "Negotiating", "Closed"].includes(l.stage)).length
-  const leadQualificationRate = totalLeads ? qualifiedLeads / totalLeads : 0
+  const rtbLeads = leads.filter((l) => ["RTB", "Negotiating", "Closed"].includes(l.stage)).length
+  const leadQualificationRate = totalLeads ? rtbLeads / totalLeads : 0
 
   const whatsappLogs = await readStore<WhatsappLogEntry[]>("whatsapp-log", [])
   const totalWhatsappSent = whatsappLogs.filter((l) => l.messageType !== "test").length
