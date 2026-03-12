@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import { readStore, writeStore } from "@/lib/poc-store"
 
-const STAGES = ["New", "Contacted", "Qualified", "Negotiating", "Closed", "Lost"] as const
+const STAGES = ["New", "Contacted", "RTB", "Negotiating", "Closed", "Lost", "Out of Scope"] as const
 type Stage = (typeof STAGES)[number]
 
 type StoreShape = Record<string, { leadId: string; stage: Stage; updatedAt: string }>
