@@ -1,6 +1,6 @@
 "use client"
 
-import { Sparkles, X } from "lucide-react"
+import { Sparkles } from "lucide-react"
 import Image from "next/image"
 import {
   Dialog,
@@ -44,15 +44,6 @@ export function AvatarSelectionModal({
             Set up your AI avatar&apos;s knowledge, personality, and interaction style.
           </DialogDescription>
         </DialogHeader>
-
-        {/* Custom close button (DialogContent still renders its own accessible close button) */}
-        <button
-          onClick={() => onOpenChange(false)}
-          className="absolute right-4 top-4 p-1 text-muted-foreground hover:text-foreground"
-          aria-label="Close"
-        >
-          <X className="h-4 w-4" />
-        </button>
 
         {/* Avatar Grid */}
         <div className="grid grid-cols-2 gap-4">

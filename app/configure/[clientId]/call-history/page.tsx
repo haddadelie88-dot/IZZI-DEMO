@@ -207,6 +207,122 @@ const mockCalls: CallRecord[] = [
       { speaker: "caller", text: "Hello, I'm interested in townhouses in Arabian Ranches.", timestamp: "0:08" },
     ],
   },
+  {
+    id: "6",
+    date: "2024-03-13",
+    time: "2:20 PM",
+    duration: "5:01",
+    durationSeconds: 301,
+    status: "completed",
+    direction: "inbound",
+    callerName: "Noor Al-Fahim",
+    callerPhone: "noor.alfahim@email.com",
+    productType: "Waterfront Apartment",
+    summary: "Requested waterfront inventory in Dubai Marina. Asked about payment plans and handover dates.",
+    transcript: [
+      { speaker: "agent", text: "Welcome back Noor, what would you like to focus on today?", timestamp: "0:00" },
+      { speaker: "caller", text: "Show me waterfront options with flexible payment plans.", timestamp: "0:11" },
+    ],
+  },
+  {
+    id: "7",
+    date: "2024-03-12",
+    time: "10:10 AM",
+    duration: "2:58",
+    durationSeconds: 178,
+    status: "completed",
+    direction: "inbound",
+    callerName: "Khaled Ibrahim",
+    callerPhone: "khaled.ibrahim@email.com",
+    productType: "Townhouse",
+    summary: "Qualified for townhouse purchase, asked for shortlist and booking process details.",
+    transcript: [
+      { speaker: "agent", text: "Hi Khaled, let's continue your townhouse search.", timestamp: "0:00" },
+      { speaker: "caller", text: "I need a 3BR option in a family community.", timestamp: "0:08" },
+    ],
+  },
+  {
+    id: "8",
+    date: "2024-03-12",
+    time: "4:05 PM",
+    duration: "1:44",
+    durationSeconds: 104,
+    status: "missed",
+    direction: "inbound",
+    callerName: "Rania Mahmoud",
+    callerPhone: "rania.mahmoud@email.com",
+    productType: "Penthouse",
+    summary: "Session ended early. Follow-up was triggered through WhatsApp automation.",
+    transcript: [],
+  },
+  {
+    id: "9",
+    date: "2024-03-11",
+    time: "11:50 AM",
+    duration: "4:20",
+    durationSeconds: 260,
+    status: "completed",
+    direction: "outbound",
+    callerName: "Yousef Darwish",
+    callerPhone: "yousef.darwish@email.com",
+    productType: "Apartment",
+    summary: "Re-engaged lead after Day 7 message, discussed fresh listings and updated preferences.",
+    transcript: [
+      { speaker: "agent", text: "Hi Yousef, I have fresh listings matching your request.", timestamp: "0:00" },
+      { speaker: "caller", text: "Great, show me options near Downtown and Business Bay.", timestamp: "0:10" },
+    ],
+  },
+  {
+    id: "10",
+    date: "2024-03-11",
+    time: "6:10 PM",
+    duration: "3:12",
+    durationSeconds: 192,
+    status: "completed",
+    direction: "inbound",
+    callerName: "Sara Al-Mutairi",
+    callerPhone: "sara.mutairi@email.com",
+    productType: "Villa",
+    summary: "Asked for premium villas with payment milestones aligned to project completion.",
+    transcript: [
+      { speaker: "agent", text: "Sara, I can show premium villa options with staged payments.", timestamp: "0:00" },
+      { speaker: "caller", text: "Perfect. I need flexible milestones and strong ROI.", timestamp: "0:13" },
+    ],
+  },
+  {
+    id: "11",
+    date: "2024-03-10",
+    time: "9:35 AM",
+    duration: "5:40",
+    durationSeconds: 340,
+    status: "completed",
+    direction: "inbound",
+    callerName: "Hassan Malik",
+    callerPhone: "hassan.malik@email.com",
+    productType: "Commercial Unit",
+    summary: "Explored commercial options, shortlisted two units, and moved to negotiating stage.",
+    transcript: [
+      { speaker: "agent", text: "Let us compare two commercial units based on your team size.", timestamp: "0:00" },
+      { speaker: "caller", text: "Please share expected yields for both.", timestamp: "0:09" },
+    ],
+  },
+  {
+    id: "12",
+    date: "2024-03-10",
+    time: "1:25 PM",
+    duration: "2:36",
+    durationSeconds: 156,
+    status: "completed",
+    direction: "outbound",
+    callerName: "Leila Haddad",
+    callerPhone: "leila.haddad@email.com",
+    productType: "Luxury Villa",
+    summary: "Follow-up on previously shortlisted villas, lead requested updated comparative sheet.",
+    transcript: [
+      { speaker: "agent", text: "Leila, I prepared your updated luxury villa comparison.", timestamp: "0:00" },
+      { speaker: "caller", text: "Great, send me the one with highest rental upside.", timestamp: "0:07" },
+    ],
+  },
 ]
 
 export default function CallHistoryPage() {
@@ -538,7 +654,7 @@ export default function CallHistoryPage() {
               <div className="bg-card rounded-lg border border-border p-12 text-center max-w-lg">
                 <div className="flex justify-center mb-4">
                   <div className="p-4 bg-muted rounded-full">
-                    <Phone className="h-8 w-8 text-muted-foreground" />
+                        <Sparkles className="h-8 w-8 text-muted-foreground" />
                   </div>
                 </div>
                 <h3 className="text-xl font-semibold text-foreground mb-2">

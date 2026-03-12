@@ -1,7 +1,6 @@
 "use client"
 
 import { LogOut } from "lucide-react"
-import { usePathname } from "next/navigation"
 import { Button } from "@/components/ui/button"
 
 interface HeaderProps {
@@ -10,58 +9,19 @@ interface HeaderProps {
 }
 
 export function Header({ showSave, onSave }: HeaderProps) {
-  const pathname = usePathname()
-
-  const currentRole: "super" | "tenant" | "none" =
-    pathname?.startsWith("/super-admin") ? "super" : pathname?.startsWith("/tenant") ? "tenant" : "none"
-
-  const handleRoleChange = (role: "super" | "tenant") => {
-    if (role === currentRole) return
-    const tenantCookie = document.cookie
-      .split("; ")
-      .find((c) => c.startsWith("izzi_demo_tenant="))
-      ?.split("=")[1]
-    const tenantId = tenantCookie || "dar-global"
-    const target =
-      role === "super"
-        ? "/super-admin/tenants"
-        : `/tenant/dashboard?tenantId=${encodeURIComponent(tenantId)}`
-    // Next.js dev router can occasionally fail to fetch flight data while recompiling.
-    // Use full-page navigation for role switching to avoid runtime navigation fetch errors.
-    window.location.assign(target)
+  const handleLogout = () => {
+    document.cookie = "izzi_demo_role=; path=/; max-age=0"
+    document.cookie = "izzi_demo_tenant=; path=/; max-age=0"
+    document.cookie = "izzi_demo_tenant_role=; path=/; max-age=0"
+    window.location.assign("/login")
   }
 
   return (
     <header className="flex items-center justify-end gap-3 p-4">
-      <div className="flex items-center gap-1 rounded-full border border-border bg-background px-1 py-0.5 text-xs">
-        <span className="px-2 text-[11px] text-muted-foreground">Role</span>
-        <div className="flex rounded-full bg-card shadow-sm overflow-hidden">
-          <Button
-            type="button"
-            variant="ghost"
-            className={`h-7 px-3 text-[11px] rounded-none ${
-              currentRole === "super" ? "bg-foreground text-background hover:bg-foreground/90" : "text-muted-foreground"
-            }`}
-            onClick={() => handleRoleChange("super")}
-          >
-            Super Admin
-          </Button>
-          <Button
-            type="button"
-            variant="ghost"
-            className={`h-7 px-3 text-[11px] rounded-none border-l border-border/60 ${
-              currentRole === "tenant" ? "bg-foreground text-background hover:bg-foreground/90" : "text-muted-foreground"
-            }`}
-            onClick={() => handleRoleChange("tenant")}
-          >
-            Tenant Admin
-          </Button>
-        </div>
-      </div>
-
       <Button
         variant="outline"
         className="border-foreground text-foreground hover:bg-foreground hover:text-background"
+        onClick={handleLogout}
       >
         Logout
         <LogOut className="h-4 w-4 ml-2" />

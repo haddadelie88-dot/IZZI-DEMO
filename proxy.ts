@@ -36,6 +36,9 @@ export async function proxy(req: NextRequest) {
     if (pathname.startsWith("/tenant") && (demoRole === "tenant" || demoRole === "super")) {
       return NextResponse.next()
     }
+    if (pathname.startsWith("/configure") && (demoRole === "tenant" || demoRole === "super")) {
+      return NextResponse.next()
+    }
     const url = req.nextUrl.clone()
     url.pathname = "/login"
     return NextResponse.redirect(url)

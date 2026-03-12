@@ -21,6 +21,7 @@ export interface Client {
   email: string
   phone: string
   domain?: string
+  senderEmail?: string
   industry: string
   status: "published" | "not_published"
   crmConnected?: boolean
@@ -93,6 +94,7 @@ export function ClientCard({
             <User className="h-3 w-3" />
             {client.clientName}
           </p>
+          {client.domain && <p className="text-xs text-muted-foreground">Domain: {client.domain}</p>}
         </div>
       </div>
 
@@ -106,6 +108,12 @@ export function ClientCard({
           <Phone className="h-4 w-4" />
           {client.phone}
         </p>
+        {client.senderEmail && (
+          <p className="text-sm text-muted-foreground flex items-center gap-2">
+            <Mail className="h-4 w-4" />
+            Sender: {client.senderEmail}
+          </p>
+        )}
       </div>
 
       {/* Actions */}

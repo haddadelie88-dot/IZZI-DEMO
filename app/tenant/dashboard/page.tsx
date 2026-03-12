@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation"
 import { BarChart3, Sparkles, TrendingUp, Users, MessageCircle, CheckCircle2 } from "lucide-react"
 import { Header } from "@/components/admin/header"
 import { PortalNav } from "@/components/admin/portal-nav"
+import { QuotaBar } from "@/components/shared/quota-bar"
 import { Card } from "@/components/ui/card"
 
 type PipelineStage = { stage: string; count: number }
@@ -23,6 +24,11 @@ export default function TenantDashboardPage() {
     whatsappResponseRate: number
     lostReengagementRate: number
   }>({ whatsappResponseRate: 0, lostReengagementRate: 0 })
+  const [quota, setQuota] = useState<{ totalMinutes: number; usedMinutes: number; remainingMinutes: number }>({
+    totalMinutes: 5000,
+    usedMinutes: 3420,
+    remainingMinutes: 1580,
+  })
 
   useEffect(() => {
     async function load() {
@@ -30,6 +36,7 @@ export default function TenantDashboardPage() {
         fetch("/api/analytics/lead-pipeline?agent_id=noura").catch(() => null),
         fetch("/api/analytics/real-estate-kpis?agent_id=noura").catch(() => null),
       ])
+      const quotaRes = await fetch(`/api/billing/balance?tenantId=${encodeURIComponent(tenantId)}`).catch(() => null)
 
       if (pipelineRes?.ok) {
         const json = (await pipelineRes.json().catch(() => null)) as { stages?: PipelineStage[] } | null
@@ -49,10 +56,14 @@ export default function TenantDashboardPage() {
           })
         }
       }
+      if (quotaRes?.ok) {
+        const json = (await quotaRes.json().catch(() => null)) as typeof quota | null
+        if (json) setQuota(json)
+      }
     }
 
     load()
-  }, [])
+  }, [tenantId])
 
   useEffect(() => {
     if (!pipeline.length) return
@@ -145,6 +156,16 @@ export default function TenantDashboardPage() {
               <p className="text-2xl font-bold text-foreground">{leadKpis.closedDeals}</p>
             </Card>
           </div>
+
+          <Card className="p-5 bg-card border-border">
+            <QuotaBar
+              totalMinutes={quota.totalMinutes}
+              usedMinutes={quota.usedMinutes}
+              onTopUp={() => {
+                window.location.assign(`/tenant/billing?tenantId=${encodeURIComponent(tenantId)}`)
+              }}
+            />
+          </Card>
 
           {/* Engagement KPIs */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

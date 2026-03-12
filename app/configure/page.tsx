@@ -110,6 +110,10 @@ export default function ConfigureAvatar() {
   const searchParams = useSearchParams()
   const mode = searchParams.get("mode")
   const clientId = searchParams.get("clientId") || "client"
+  const homePath =
+    typeof window !== "undefined" && document.cookie.includes("izzi_demo_role=super")
+      ? "/super-admin/tenants"
+      : `/tenant/dashboard?tenantId=${encodeURIComponent(clientId)}`
   
   const [avatarModalOpen, setAvatarModalOpen] = useState(mode === "add")
   const [isDraftMode, setIsDraftMode] = useState(mode === "add")
@@ -254,7 +258,7 @@ export default function ConfigureAvatar() {
       allAvatars: tenantAvatars,
     })
     setIsDraftMode(false)
-    router.push("/")
+    router.push(homePath)
   }
 
   useEffect(() => {
@@ -460,7 +464,7 @@ export default function ConfigureAvatar() {
           {/* Back Button */}
           <Button
             variant="outline"
-            onClick={() => router.push("/")}
+            onClick={() => router.push(homePath)}
             className="mb-8 border-foreground text-foreground"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />

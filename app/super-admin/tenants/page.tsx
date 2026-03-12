@@ -26,8 +26,60 @@ const initialTenants: Client[] = [
     companyName: "Dar Global",
     clientName: "Dar Global Admin",
     email: "tenantadmin@dar-global.com",
-    phone: "",
+    phone: "+971-50-111-2222",
+    domain: "darglobal.com",
+    senderEmail: "noreply@darglobal.com",
     industry: "Real Estate",
+    status: "published",
+    crmConnected: true,
+    crmType: "Salesforce",
+  },
+  {
+    id: "blue-oak",
+    companyName: "Blue Oak Properties",
+    clientName: "Nadia Salem",
+    email: "nadia@blueoak.ae",
+    phone: "+971-50-333-4444",
+    domain: "blueoak.ae",
+    senderEmail: "noreply@blueoak.ae",
+    industry: "Real Estate",
+    status: "published",
+    crmConnected: true,
+    crmType: "Salesforce",
+  },
+  {
+    id: "summit-retail",
+    companyName: "Summit Retail Group",
+    clientName: "Karim Nasser",
+    email: "karim@summitretail.com",
+    phone: "+971-50-555-6666",
+    domain: "summitretail.com",
+    senderEmail: "noreply@summitretail.com",
+    industry: "Retail - Furniture",
+    status: "not_published",
+  },
+  {
+    id: "aurora-health",
+    companyName: "Aurora Health",
+    clientName: "Dr. Lina Omar",
+    email: "lina@aurorahealth.com",
+    phone: "+971-50-777-8888",
+    domain: "aurorahealth.com",
+    senderEmail: "noreply@aurorahealth.com",
+    industry: "Healthcare",
+    status: "published",
+    crmConnected: true,
+    crmType: "HubSpot",
+  },
+  {
+    id: "nova-finance",
+    companyName: "Nova Finance",
+    clientName: "Faisal Al-Khatib",
+    email: "faisal@novafinance.com",
+    phone: "+971-50-999-0000",
+    domain: "novafinance.com",
+    senderEmail: "noreply@novafinance.com",
+    industry: "Finance",
     status: "not_published",
   },
 ]
@@ -80,10 +132,12 @@ export default function SuperAdminTenantsPage() {
             ? {
                 ...t,
                 companyName: data.companyName,
-                clientName: data.clientName,
+                clientName: data.clientName || t.clientName,
                 email: data.email,
                 phone: data.phone,
-                industry: data.industryType,
+                domain: data.domain,
+                senderEmail: data.senderEmail,
+                industry: data.industryType || t.industry,
               }
             : t,
         ),
@@ -94,10 +148,12 @@ export default function SuperAdminTenantsPage() {
       const newTenant: Client = {
         id: Date.now().toString(),
         companyName: data.companyName,
-        clientName: data.clientName,
+        clientName: data.clientName || data.companyName,
         email: data.email,
         phone: data.phone,
-        industry: data.industryType,
+        domain: data.domain,
+        senderEmail: data.senderEmail,
+        industry: data.industryType || "Real Estate",
         status: "not_published",
       }
       setTenants([...tenants, newTenant])
@@ -105,7 +161,7 @@ export default function SuperAdminTenantsPage() {
   }
 
   const handleViewTenantDashboard = (tenant: Client) => {
-    router.push(`/tenant/dashboard?tenantId=${encodeURIComponent(tenant.id)}`)
+    router.push(`/configure?clientId=${encodeURIComponent(tenant.id)}`)
   }
 
   const handleConnectCRM = (tenant: Client) => {
@@ -305,6 +361,7 @@ export default function SuperAdminTenantsPage() {
                 domain: editingTenant.domain || "",
                 email: editingTenant.email,
                 phone: editingTenant.phone,
+                senderEmail: editingTenant.senderEmail || "",
                 industryType: editingTenant.industry,
               }
             : null

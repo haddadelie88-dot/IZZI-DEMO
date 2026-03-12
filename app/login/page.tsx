@@ -10,11 +10,12 @@ import { Card } from "@/components/ui/card"
 
 const SUPER_ADMIN_EMAIL = "superadmin@izzi.ai"
 const TENANT_ADMIN_EMAIL = "tenantadmin@dar-global.com"
+const TENANT_MEMBER_EMAIL = "sales@dar-global.com"
 const DEMO_PASSWORD = "demo123"
 const DEFAULT_TENANT_ID = "dar-global"
 
 export default function LoginPage() {
-  const [role, setRole] = useState<"super" | "tenant">("tenant")
+  const [role, setRole] = useState<"super" | "tenant" | "tenant-member">("tenant")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState<string | null>(null)
@@ -25,11 +26,13 @@ export default function LoginPage() {
     setError(null)
     setLoading(true)
 
-    const expectedEmail = role === "super" ? SUPER_ADMIN_EMAIL : TENANT_ADMIN_EMAIL
+    const expectedEmail =
+      role === "super" ? SUPER_ADMIN_EMAIL : role === "tenant-member" ? TENANT_MEMBER_EMAIL : TENANT_ADMIN_EMAIL
     if (email.trim().toLowerCase() === expectedEmail.toLowerCase() && password === DEMO_PASSWORD) {
       document.cookie = `izzi_demo_role=${role}; path=/; max-age=${60 * 60 * 24}`
-      if (role === "tenant") {
+      if (role !== "super") {
         document.cookie = `izzi_demo_tenant=${DEFAULT_TENANT_ID}; path=/; max-age=${60 * 60 * 24}`
+        document.cookie = `izzi_demo_tenant_role=${role === "tenant-member" ? "member" : "admin"}; path=/; max-age=${60 * 60 * 24}`
       }
       window.location.assign(
         role === "super"
@@ -42,8 +45,9 @@ export default function LoginPage() {
     const result = await signIn("credentials", { email, password, redirect: false })
     if (result?.ok) {
       document.cookie = `izzi_demo_role=${role}; path=/; max-age=${60 * 60 * 24}`
-      if (role === "tenant") {
+      if (role !== "super") {
         document.cookie = `izzi_demo_tenant=${DEFAULT_TENANT_ID}; path=/; max-age=${60 * 60 * 24}`
+        document.cookie = `izzi_demo_tenant_role=${role === "tenant-member" ? "member" : "admin"}; path=/; max-age=${60 * 60 * 24}`
       }
       window.location.assign(
         role === "super"
@@ -97,6 +101,15 @@ export default function LoginPage() {
                 Password: <span className="font-mono text-xs">{DEMO_PASSWORD}</span>
               </p>
             </Card>
+            <Card className="p-3 bg-card/60 border-border">
+              <p className="font-semibold text-foreground mb-1">Tenant User (Sales / Marketing)</p>
+              <p>
+                Email: <span className="font-mono text-xs">{TENANT_MEMBER_EMAIL}</span>
+              </p>
+              <p>
+                Password: <span className="font-mono text-xs">{DEMO_PASSWORD}</span>
+              </p>
+            </Card>
           </div>
         </div>
 
@@ -109,13 +122,14 @@ export default function LoginPage() {
 
             <div className="space-y-2">
               <label className="text-xs font-medium text-muted-foreground">Sign in as</label>
-              <Select value={role} onValueChange={(v) => setRole(v as "super" | "tenant")}>
+              <Select value={role} onValueChange={(v) => setRole(v as "super" | "tenant" | "tenant-member")}>
                 <SelectTrigger className="bg-background border-border h-10">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="super">Super Admin (Platform)</SelectItem>
                   <SelectItem value="tenant">Tenant Admin (Dar Global)</SelectItem>
+                  <SelectItem value="tenant-member">Tenant User (Sales/Marketing)</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -125,7 +139,9 @@ export default function LoginPage() {
                 <label className="text-xs font-medium text-muted-foreground">Email</label>
                 <Input
                   type="email"
-                  placeholder={role === "super" ? SUPER_ADMIN_EMAIL : TENANT_ADMIN_EMAIL}
+                  placeholder={
+                    role === "super" ? SUPER_ADMIN_EMAIL : role === "tenant-member" ? TENANT_MEMBER_EMAIL : TENANT_ADMIN_EMAIL
+                  }
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="h-10 bg-background border-border"

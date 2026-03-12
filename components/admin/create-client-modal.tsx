@@ -21,11 +21,12 @@ import {
 
 export interface ClientFormData {
   companyName: string
-  clientName: string
   domain: string
   email: string
   phone: string
-  industryType: string
+  senderEmail: string
+  clientName?: string
+  industryType?: string
 }
 
 interface CreateClientModalProps {
@@ -55,10 +56,11 @@ export function CreateClientModal({
 }: CreateClientModalProps) {
   const [formData, setFormData] = useState<ClientFormData>({
     companyName: "",
-    clientName: "",
     domain: "",
     email: "",
     phone: "",
+    senderEmail: "",
+    clientName: "",
     industryType: "",
   })
 
@@ -76,10 +78,11 @@ export function CreateClientModal({
     } else if (!newOpen) {
       setFormData({
         companyName: "",
-        clientName: "",
         domain: "",
         email: "",
         phone: "",
+        senderEmail: "",
+        clientName: "",
         industryType: "",
       })
     }
@@ -96,10 +99,11 @@ export function CreateClientModal({
     onSubmit(formData)
     setFormData({
       companyName: "",
-      clientName: "",
       domain: "",
       email: "",
       phone: "",
+      senderEmail: "",
+      clientName: "",
       industryType: "",
     })
     handleOpenChange(false)
@@ -131,20 +135,6 @@ export function CreateClientModal({
               placeholder="e.g., Premier Properties Limited"
               value={formData.companyName}
               onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
-              className="bg-background border-border"
-              required
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="clientName" className="text-foreground font-medium">
-              Client Name
-            </Label>
-            <Input
-              id="clientName"
-              placeholder="john smith"
-              value={formData.clientName}
-              onChange={(e) => setFormData({ ...formData, clientName: e.target.value })}
               className="bg-background border-border"
               required
             />
@@ -193,6 +183,21 @@ export function CreateClientModal({
                 required
               />
             </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="senderEmail" className="text-foreground font-medium">
+              Sender Email (from IZZI)
+            </Label>
+            <Input
+              id="senderEmail"
+              type="email"
+              placeholder="noreply@darglobal.com"
+              value={formData.senderEmail}
+              onChange={(e) => setFormData({ ...formData, senderEmail: e.target.value })}
+              className="bg-background border-border"
+              required
+            />
           </div>
 
           <div className="space-y-2">

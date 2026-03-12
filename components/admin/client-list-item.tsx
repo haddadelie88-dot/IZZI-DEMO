@@ -59,6 +59,7 @@ export function ClientListItem({
             <User className="h-3 w-3 flex-shrink-0" />
             <span className="truncate">{client.clientName}</span>
           </p>
+          {client.domain && <p className="text-xs text-muted-foreground">Domain: {client.domain}</p>}
         </div>
       </div>
 
@@ -72,6 +73,12 @@ export function ClientListItem({
           <Phone className="h-4 w-4 flex-shrink-0" />
           <span>{client.phone}</span>
         </span>
+        {client.senderEmail && (
+          <span className="flex items-center gap-1.5">
+            <Mail className="h-4 w-4 flex-shrink-0" />
+            <span className="truncate max-w-[220px]">Sender: {client.senderEmail}</span>
+          </span>
+        )}
       </div>
 
       {/* Right: Actions */}
