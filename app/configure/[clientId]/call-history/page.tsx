@@ -42,7 +42,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 
-const crmStages = ["New", "Contacted", "RTB", "Negotiating", "Closed", "Lost", "Out of Scope"] as const
+const crmStages = ["OPEN", "RTB", "OFF_TOPIC", "CONTACTED", "NEGOTIATING", "CLOSED", "LOST"] as const
 type CrmStage = (typeof crmStages)[number]
 
 type WhatsappLogEntry = {
@@ -235,7 +235,7 @@ const mockCalls: CallRecord[] = [
     callerName: "Khaled Ibrahim",
     callerPhone: "khaled.ibrahim@email.com",
     productType: "Townhouse",
-    summary: "Qualified for townhouse purchase, asked for shortlist and booking process details.",
+    summary: "Flagged as RTB for townhouse purchase, asked for shortlist and booking process details.",
     transcript: [
       { speaker: "agent", text: "Hi Khaled, let's continue your townhouse search.", timestamp: "0:00" },
       { speaker: "caller", text: "I need a 3BR option in a family community.", timestamp: "0:08" },
@@ -342,7 +342,7 @@ export default function CallHistoryPage() {
   const [selectedCall, setSelectedCall] = useState<CallRecord | null>(null)
   const [isPlaying, setIsPlaying] = useState(false)
   const [audioProgress, setAudioProgress] = useState(0)
-  const [crmStage, setCrmStage] = useState<CrmStage>("New")
+  const [crmStage, setCrmStage] = useState<CrmStage>("OPEN")
   const [stageUpdating, setStageUpdating] = useState(false)
   const [stageError, setStageError] = useState<string | null>(null)
   const [whatsappLogs, setWhatsappLogs] = useState<WhatsappLogEntry[]>([])
@@ -431,7 +431,7 @@ export default function CallHistoryPage() {
       if (!res || !res.ok) return
       const json = (await res.json().catch(() => null)) as any
       if (cancelled) return
-      const stage = (json?.stage as CrmStage) || "New"
+      const stage = (json?.stage as CrmStage) || "OPEN"
       if (crmStages.includes(stage)) setCrmStage(stage)
     }
     load()
@@ -1036,7 +1036,7 @@ export default function CallHistoryPage() {
                 )}
 
                 {/* Post-Sale Journey */}
-                {crmStage === "Closed" && (
+                {crmStage === "CLOSED" && (
                   <div className="space-y-3">
                     <div className="flex items-center gap-2">
                       <CheckCircle className="h-4 w-4 text-primary" />
